@@ -1,4 +1,4 @@
-import {BCFViewpointsPlugin, FastNavPlugin, math, stats, Viewer,} from "@xeokit/xeokit-sdk/dist/xeokit-sdk.es.js";
+import {BCFViewpointsPlugin, FastNavPlugin, math, stats, Viewer,} from "../../xeokit-sdk/dist/xeokit-sdk.es.js";
 
 import {Controller} from "./Controller.js";
 import {BusyModal} from "./BusyModal.js";
@@ -22,6 +22,7 @@ import {ObjectContextMenu} from "./contextMenus/ObjectContextMenu.js";
 import {CanvasContextMenu} from "./contextMenus/CanvasContextMenu.js";
 import {OrthoMode} from "./toolbar/OrthoMode.js";
 import {PropertiesInspector} from "./inspector/PropertiesInspector.js";
+import {MeasurementsInspector} from "./inspector/MeasurementsInspector.js";
 import {ObjectsKdTree3} from "./collision/ObjectsKdTree3.js";
 import {MarqueeSelectionTool} from "./toolbar/MarqueeSelectionTool.js";
 import {MeasureDistanceTool} from "./toolbar/MeasureDistanceTool.js";
@@ -126,6 +127,12 @@ function createInspectorTemplate() {
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#" data-xeokit-i18n="propertiesInspector.title">Properties</a>
         <div class="xeokit-tab-content">        
         <div class="xeokit-properties"></div>
+        </div>
+    </div>
+     <div class="xeokit-tab xeokit-measurementsTab">
+        <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Measurements</a>
+        <div class="xeokit-tab-content">        
+        <div id="xeokit-measurements" class="xeokit-measurements"></div>
         </div>
     </div>
 </div>`;
@@ -324,6 +331,12 @@ class BIMViewer extends Controller {
                 propertiesElement: inspectorElement.querySelector(".xeokit-properties")
             });
         }
+
+        this._measurementsInspector = new MeasurementsInspector(this, {
+            propertiesTabElement: inspectorElement.querySelector(".xeokit-measurementsTab"),
+            propertiesElement: inspectorElement.querySelector(".xeokit-measurements")
+        });
+        this._measurementsInspector.setEnabled(true);
 
         this._resetAction = new ResetAction(this, {
             buttonElement: toolbarElement.querySelector(".xeokit-reset"),
@@ -1646,6 +1659,9 @@ class BIMViewer extends Controller {
             case "properties":
                 tabSelector = "xeokit-propertiesTab";
                 break;
+            case "measurements":
+                tabSelector = "xeokit-measurementsTab";
+                break;
             default:
                 this.error("openTab() - tab not recognized: '" + tabId + "'");
                 return;
@@ -1709,6 +1725,10 @@ class BIMViewer extends Controller {
         let propertiesTab = this._inspectorElement.querySelector(".xeokit-propertiesTab");
         if (hasClass(propertiesTab, activeClass)) {
             return "properties";
+        }
+        let measurementsTab = this._inspectorElement.querySelector(".xeokit-measurementsTab");
+        if (hasClass(measurementsTab, activeClass)) {
+            return "measurements";
         }
         return "none";
     }

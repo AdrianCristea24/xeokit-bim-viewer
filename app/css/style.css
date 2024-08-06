@@ -169,6 +169,51 @@ body {
     transition: all 300ms ease-in-out;
 }
 
+#myMeasure {
+    width: 250px;
+    height: 600px; /* Optional: Limit the maximum width */
+    padding: 10px; /* Add padding to give space inside the panel */
+    background-color: rgb(255, 255, 255); /* Set background color to gray */
+    color: rgb(0, 0, 0); /* Set text color to white for contrast */
+    border-radius: 8px; /* Rounded corners for a more panel-like appearance */
+    border: 2px solid black; /* Add a solid black border */
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2); /* Optional: Add shadow for better visibility */
+    top: 300px; /* Ensure proper spacing from the top */
+    left: 5px; /* Position from the left */
+    position: fixed; /* Fixed position to keep it in place */
+    z-index: 100000; /* High z-index to ensure it stays on top */
+    gap: 25px;
+    pointer-events: none; /* Make it non-interactive */
+    display: flex; /* Use flexbox to align content */
+    align-items: top; /* Center items vertically */
+    justify-content: left; /* Center items horizontally */
+    transition: all 300ms ease-in-out; /* Smooth transition for changes */
+    font-family: Arial, sans-serif; /* Optional: Set a font family for text */
+    visibility: hidden;
+}
+
+.clickable-span {
+    display: block;
+    padding: 7px;
+    font-size: 16px;
+    background-color: #03103F;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 33px;
+    z-index: 100000; /* High z-index to ensure it stays on top */
+}
+
+.clickable-span:hover {
+    background-color: #04144e;
+    z-index: 100000; /* High z-index to ensure it stays on top */
+}
+
+.xeokit-btn-group-measure {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+
 #inspector_toggle {
     display: none;
 }

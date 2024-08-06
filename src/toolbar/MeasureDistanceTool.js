@@ -111,6 +111,9 @@ export class MeasureDistanceTool extends Controller {
             this.setActive(false);
             this.clear();
         });
+
+        this.measurementCanvasElement =  document.getElementById("xeokit-measurements");
+        this.startUpdateLoop();
     }
 
     getNumMeasurements() {
@@ -143,4 +146,119 @@ export class MeasureDistanceTool extends Controller {
         this._contextMenu.destroy();
         super.destroy();
     }
+
+    startUpdateLoop() {
+        let started = false;
+        let isToggle = false;
+        setInterval(() => {
+            this.dot = document.getElementsByClassName("viewer-ruler-label");
+            
+            if (this.dot.length > 0) { // Check if there are any elements in the collection
+                started = true;
+                this.setVisibleMeasureDetails(true);
+                this.createTextOverlay();
+
+                if (!isToggle){
+                    document.getElementById('inspector_toggle').checked = true;
+                    let measurementsTab = document.getElementsByClassName("xeokit-measurementsTab")[0];
+                    let propTab = document.getElementsByClassName("xeokit-propertiesTab")[0];
+
+                    if (measurementsTab) {
+                        propTab.classList.remove('active');
+                        measurementsTab.classList.add('active');
+                    }
+
+                    isToggle = true;
+                }
+            }
+            else if (started){
+                started = false;
+                this.createTextOverlay();
+            }
+        }, 200);
+    }
+
+    setVisibleMeasureDetails(visible = true) {
+        if (!this.measurementCanvasElement) {
+            return;
+        }
+        this.measurementCanvasElement.style.visibility = visible ? "visible" : "hidden";
+    }
+
+    createTextOverlay() {
+
+        // Create a div element for the text panel
+        var measureObj = document.getElementById("textOverlay") ?? null;
+        if (!measureObj){
+            this._textOverlayElement = document.createElement('span');
+            this._textOverlayElement.id = 'textOverlay';
+            this._textOverlayElement.className = 'xeokit-btn-group-measure';
+
+            const container = this.measurementCanvasElement;
+
+            if (container) {
+                container.appendChild(this._textOverlayElement);
+            } else {
+                console.error("Canvas container is not defined.");
+            }
+            measureObj = document.getElementById("textOverlay");
+        }
+
+        measureObj.innerHTML = '';
+        let spanTotal = document.createElement('span');
+        spanTotal.textContent = '';
+        spanTotal.className = 'spanTotal';
+        spanTotal.id = 'spanTotal';
+        measureObj.appendChild(spanTotal);
+
+        var allMeasures = document.getElementsByClassName("viewer-ruler-label");
+
+        let sum = 0;
+        let unit = 'm';
+        for (let i = 0; i < allMeasures.length; i += 4) {
+            // Create a new span element for the display of the measure lenght
+            let span = document.createElement('span');
+            let br = document.createElement('br');
+            let text = allMeasures[i].innerHTML;
+            let distance = parseFloat(this.extractFloatFromString(text).toFixed(2));
+
+            if (text[text.length - 1] == 'm'){
+                unit = text[text.length - 1];
+                sum += distance;
+                let copytext = distance + unit;
+
+                span.addEventListener('click', function() {
+                    navigator.clipboard.writeText(copytext).then(() => {
+                        console.log('Text copied to clipboard:', copytext);
+                    }).catch(err => {
+                        console.error('Failed to copy text:', err);
+                    });
+                });
+                
+                span.className = 'clickable-span';
+                span.textContent = "•  " +  distance + unit;
+    
+                measureObj.appendChild(span);
+                measureObj.appendChild(br);
+            }
+        }
+
+        if (sum != 0){
+            spanTotal.textContent = "Total: " + sum.toFixed(2) + unit;
+        }
+    }
+
+
+    extractFloatFromString(input) {
+        // Regular expression to match a floating-point number
+        const floatRegex = /[-+]?[0-9]*\.?[0-9]+/;
+        
+        // Extract the number from the input string
+        const match = input.match(floatRegex);
+        
+        // Convert the matched string to a float and return it
+        return match ? parseFloat(match[0]) : 0;
+    }
+    
+
 }
