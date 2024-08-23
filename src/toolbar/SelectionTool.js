@@ -1,4 +1,6 @@
 import {Controller} from "../Controller.js";
+import {AnnotationsPlugin, math } from "../../../xeokit-sdk/dist/xeokit-sdk.es.js";
+
 
 /** @private */
 class SelectionTool extends Controller {
@@ -12,6 +14,19 @@ class SelectionTool extends Controller {
         }
 
         const buttonElement = cfg.buttonElement;
+
+        const annotations = new AnnotationsPlugin(this.viewer, {
+            markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
+           
+
+            values: {
+                markerBGColor: "black",
+                labelBGColor: "white",
+                glyph: "X",
+                title: "Untitled",
+                description: "No description"
+            }
+        });
 
         this.on("enabled", (enabled) => {
             if (!enabled) {
@@ -28,7 +43,34 @@ class SelectionTool extends Controller {
                     if (!pickResult.entity) {
                         return;
                     }
-                  pickResult.entity.selected = !pickResult.entity.selected;
+                    pickResult.entity.selected = !pickResult.entity.selected;
+
+                    if (!pickResult.entity.selected){
+                        annotations.destroyAnnotation(pickResult.entity.id);
+                        return;
+                    }
+                    
+                    if (this.viewer.scene._renderer.getAnno()){
+                        const entity = pickResult.entity;
+                        const aabb = entity.aabb;
+                        const entityCenter = math.getAABB3Center(aabb);
+                
+                        this.viewer.metaScene.metaObjects[entity.id];
+                
+                        annotations.createAnnotation({
+                            id: entity.id,
+                            entity: entity,
+                            worldPos: entityCenter,
+                            occludable: false,
+                            markerShown: true,
+                            labelShown: false,
+                
+                            values: {
+                                glyph: "" + pickResult.entity.surfaceArea.toFixed(2) + " m²",
+                            }
+                        });
+                    }
+
                 });
             } else {
                 buttonElement.classList.remove("active");

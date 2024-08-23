@@ -1,6 +1,8 @@
 import {math, XKTLoaderPlugin} from "@xeokit/xeokit-sdk/dist/xeokit-sdk.es.js";
 import {Controller} from "../Controller.js";
 import {ModelsContextMenu} from "../contextMenus/ModelsContextMenu.js";
+import {XKTLoaderPlugin as XKTREAL} from "../../../xeokit-sdk/dist/xeokit-sdk.es.js";
+
 
 const tempVec3a = math.vec3();
 
@@ -70,7 +72,7 @@ class ModelsExplorer extends Controller {
 
         this._dataSource = new BIMViewerDataSource(this.server);
 
-        this._xktLoader = new XKTLoaderPlugin(this.viewer, {
+        this._xktLoader = new XKTREAL(this.viewer, {
             dataSource: this._dataSource
         });
 

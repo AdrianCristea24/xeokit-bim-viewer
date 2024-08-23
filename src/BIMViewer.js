@@ -23,6 +23,7 @@ import {CanvasContextMenu} from "./contextMenus/CanvasContextMenu.js";
 import {OrthoMode} from "./toolbar/OrthoMode.js";
 import {PropertiesInspector} from "./inspector/PropertiesInspector.js";
 import {MeasurementsInspector} from "./inspector/MeasurementsInspector.js";
+import {OptionsInspector} from "./inspector/OptionsInspector.js";
 import {ObjectsKdTree3} from "./collision/ObjectsKdTree3.js";
 import {MarqueeSelectionTool} from "./toolbar/MarqueeSelectionTool.js";
 import {MeasureDistanceTool} from "./toolbar/MeasureDistanceTool.js";
@@ -129,10 +130,16 @@ function createInspectorTemplate() {
         <div class="xeokit-properties"></div>
         </div>
     </div>
-     <div class="xeokit-tab xeokit-measurementsTab">
+    <div class="xeokit-tab xeokit-measurementsTab">
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Measurements</a>
         <div class="xeokit-tab-content">        
         <div id="xeokit-measurements" class="xeokit-measurements"></div>
+        </div>
+    </div>
+    <div class="xeokit-tab xeokit-optionsTab">
+        <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Options</a>
+        <div class="xeokit-tab-content">
+            <div id="xeokit-options" class="xeokit-options">Optiuni</div>
         </div>
     </div>
 </div>`;
@@ -233,6 +240,7 @@ class BIMViewer extends Controller {
         };
 
         const viewer = new Viewer({
+            readableGeometryEnabled: true,
             localeService: cfg.localeService,
             canvasElement: canvasElement,
             keyboardEventsElement: cfg.keyboardEventsElement,
@@ -272,7 +280,7 @@ class BIMViewer extends Controller {
 
         this._objectsKdTree3 = new ObjectsKdTree3(({
             viewer
-        }))
+        }));
 
         this._customizeViewer();
         this._initCanvasContextMenus();
@@ -338,6 +346,12 @@ class BIMViewer extends Controller {
         });
         this._measurementsInspector.setEnabled(true);
 
+        this._optionsInspector = new OptionsInspector(this, {
+            propertiesTabElement: inspectorElement.querySelector(".xeokit-optionsTab"),
+            propertiesElement: inspectorElement.querySelector(".xeokit-options")
+        });
+        this._optionsInspector.setEnabled(true);
+
         this._resetAction = new ResetAction(this, {
             buttonElement: toolbarElement.querySelector(".xeokit-reset"),
             active: false
@@ -354,7 +368,6 @@ class BIMViewer extends Controller {
         const cameraControlNavModeMediator = new (function (bimViewer) {
 
             let threeDActive = false;
-            let firstPersonActive = false;
 
             this.setThreeDModeActive = (active) => {
                 if (active) {
@@ -372,7 +385,6 @@ class BIMViewer extends Controller {
 
             this.setFirstPersonModeActive = (active) => {
                 bimViewer.viewer.cameraControl.navMode = active ? "firstPerson" : (threeDActive ? "orbit" : "planView");
-                firstPersonActive = active;
             };
 
         })(this);
@@ -1662,6 +1674,9 @@ class BIMViewer extends Controller {
             case "measurements":
                 tabSelector = "xeokit-measurementsTab";
                 break;
+            case "options":
+                tabSelector = "xeokit-optionsTab";
+                break;
             default:
                 this.error("openTab() - tab not recognized: '" + tabId + "'");
                 return;
@@ -1678,9 +1693,9 @@ class BIMViewer extends Controller {
         for (let i = 0; i < tabs.length; i++) {
             let tabElement = tabs[i];
             if (tabElement.isEqualNode(tab)) {
-                tabElement.classList.add(activeClass)
+                tabElement.classList.add(activeClass);
             } else {
-                tabElement.classList.remove(activeClass)
+                tabElement.classList.remove(activeClass);
             }
         }
     }
@@ -1729,6 +1744,10 @@ class BIMViewer extends Controller {
         let measurementsTab = this._inspectorElement.querySelector(".xeokit-measurementsTab");
         if (hasClass(measurementsTab, activeClass)) {
             return "measurements";
+        }
+        let optionsTab = this._inspectorElement.querySelector(".xeokit-optionsTab");
+        if (hasClass(optionsTab, activeClass)) {
+            return "options";
         }
         return "none";
     }
