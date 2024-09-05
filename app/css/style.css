@@ -276,6 +276,20 @@ body {
     width: calc(100% - var(--left));
 }
 
+@keyframes fadeGreenToWhite {
+    0% {
+        background-color: rgb(15, 165, 15);
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+.green-flash {
+    background-color: rgb(15, 165, 15);
+    animation: fadeGreenToWhite 2s forwards;
+}
+
 .annotation-marker {
     color: #ffffff;
     line-height: 1.8;

@@ -34,7 +34,119 @@ class TreeViewContextMenu extends ContextMenu {
             });
         }
 
-        focusObjectItems.push(...[{
+        focusObjectItems.push(...[
+            {
+                getTitle: (context) => {
+                    return "Change Color";
+                }, doAction: (context) => {
+                    const objectId = context.treeViewNode.objectId;
+                    const viewer = context.viewer;
+                    const objectIds = [];
+                    context.treeViewPlugin.withNodeTree(context.treeViewNode, (treeViewNode) => {
+                        if (treeViewNode.objectId) {
+                            objectIds.push(treeViewNode.objectId);
+                        }
+                    });
+                    console.log(objectIds);
+            
+                    if (objectIds.length > 1) {
+                        objectIds.shift();  // Removes the first element from the array
+                    }
+                    console.log("Updated objectIds:", objectIds);
+            
+                    const colorPicker = document.createElement('input');
+                    colorPicker.type = 'color';
+                    colorPicker.style.position = 'absolute';
+                    colorPicker.style.left = '-9999px';  // Hide off-screen
+                    document.body.appendChild(colorPicker);
+            
+                    colorPicker.click();
+            
+                    // Listen for color selection
+                    colorPicker.addEventListener('change', (event) => {
+                        const selectedColor = event.target.value;
+                        console.log(`Selected color: ${selectedColor}`);
+            
+                        let hex = selectedColor.replace(/^#/, '');
+            
+                        const bigint = parseInt(hex, 16);
+                        const r = ((bigint >> 16) & 255) / 255;
+                        const g = ((bigint >> 8) & 255) / 255;
+                        const b = (bigint & 255) / 255;
+            
+                        const colorize = [r, g, b];
+                        console.log(`Colorize array (0-1 range):`, colorize);
+            
+                        for (let i = 0; i < objectIds.length; i++) {
+                            console.log(viewer.scene.objects);
+                            let entityTmp = viewer.scene.objects[objectIds[i]];
+                            if (entityTmp){
+                                entityTmp.colorize = colorize;
+                            }
+                        }
+
+                        const liElement = document.getElementById(context.treeViewNode.nodeId);
+                        if (liElement) {
+                            const spanElement = liElement.querySelector('span');
+                            if (spanElement) {
+                                spanElement.style.color = selectedColor;  // Change the text color to the selected color
+                            } else {
+                                console.log('No span element found inside the li element.');
+                            }
+                        } else {
+                            console.log('No li element found with the specified ID.');
+                        }
+            
+                        document.body.removeChild(colorPicker);
+                    });
+                }
+            }, {
+                getTitle: (context) => {
+                    return "Revert Color";
+                }, doAction: (context) => {
+                    const viewer = context.viewer;
+                    const objectIds = [];
+                    context.treeViewPlugin.withNodeTree(context.treeViewNode, (treeViewNode) => {
+                        if (treeViewNode.objectId) {
+                            objectIds.push(treeViewNode.objectId);
+                        }
+                    });
+            
+                    // Check if objectIds array has more than one item and remove the first element
+                    if (objectIds.length > 1) {
+                        objectIds.shift();  // Removes the first element from the array
+                    }
+            
+                    for (let i = 0; i < objectIds.length; i++) {
+                        console.log(viewer.scene.objects);
+                        let entityTmp = viewer.scene.objects[objectIds[i]];
+                        if (entityTmp){
+                            entityTmp.colorize = undefined;
+                        }
+                    }
+
+                    const liElement = document.getElementById(context.treeViewNode.nodeId);
+                    if (liElement) {
+                        const spanElement = liElement.querySelector('span');
+                        if (spanElement) {
+                            spanElement.style.color = 'white';  // Change the text color to the selected color
+                        }
+                    }
+            
+                }
+            }, {
+                getTitle: (context) => {
+                    return context.viewer.localeService.translate("canvasContextMenu.viewFitSelection") || "View Fit Selected";
+                }, doAction: (context) => {
+                    const viewer = context.viewer;
+                    const objectIds = [];
+                    context.treeViewPlugin.withNodeTree(context.treeViewNode, (treeViewNode) => {
+                        if (treeViewNode.objectId) {
+                            objectIds.push(treeViewNode.objectId);
+                        }
+                    });
+                }
+            },{
             getTitle: (context) => {
                 return context.viewer.localeService.translate("treeViewContextMenu.viewFit") || "View Fit";
             }, doAction: function (context) {
@@ -56,7 +168,7 @@ class TreeViewContextMenu extends ContextMenu {
                         scene.setObjectsHighlighted(scene.highlightedObjectIds, false);
                     }, 500);
                 });
-                viewer.cameraControl.pivotPos = math.getAABB3Center(aabb);
+                viewer.cameraControl.pivotPos = math$1.getAABB3Center(aabb);
             }
         }, {
             getTitle: (context) => {
@@ -70,7 +182,7 @@ class TreeViewContextMenu extends ContextMenu {
                 viewer.cameraFlight.flyTo({
                     aabb: sceneAABB, duration: 0.5
                 });
-                viewer.cameraControl.pivotPos = math.getAABB3Center(sceneAABB);
+                viewer.cameraControl.pivotPos = math$1.getAABB3Center(sceneAABB);
             }
         }, {
             getTitle: (context) => {
@@ -82,7 +194,7 @@ class TreeViewContextMenu extends ContextMenu {
                 viewer.cameraFlight.flyTo({
                     aabb: sceneAABB, duration: 0.5
                 });
-                viewer.cameraControl.pivotPos = math.getAABB3Center(sceneAABB);
+                viewer.cameraControl.pivotPos = math$1.getAABB3Center(sceneAABB);
             }
         }]);
 

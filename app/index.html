@@ -8,6 +8,7 @@
     <title>xeokit BIM Viewer</title>
     <link rel="stylesheet" href="./lib/fontawesome-free-5.11.2-web/css/all.min.css" type="text/css" />
     <link rel="stylesheet" href="../dist/xeokit-bim-viewer.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="./css/style.css" />
 </head>
 
@@ -45,9 +46,6 @@
         const locale = requestParams.locale || "en";
         const projectId = requestParams.projectId;
 
-        if (!projectId) {
-            projectId = "OTCConferenceCenter"; //ADI DEV SET DEFAULT
-        }
 
         const openExplorer = requestParams.openExplorer;
         setExplorerOpen(openExplorer === "true");

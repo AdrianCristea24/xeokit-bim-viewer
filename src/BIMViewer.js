@@ -16,6 +16,7 @@ import {ModelsExplorer} from "./explorer/ModelsExplorer.js";
 import {ObjectsExplorer} from "./explorer/ObjectsExplorer.js";
 import {ClassesExplorer} from "./explorer/ClassesExplorer.js";
 import {StoreysExplorer} from "./explorer/StoreysExplorer.js";
+import {SearchExplorer} from "./explorer/SearchExplorer.js";
 
 import {ThreeDMode} from "./toolbar/ThreeDMode.js";
 import {ObjectContextMenu} from "./contextMenus/ObjectContextMenu.js";
@@ -73,6 +74,12 @@ function createExplorerTemplate(cfg) {
                 <button type="button" class="xeokit-i18n xeokit-hideAllStoreys xeokit-btn disabled" data-xeokit-i18n="storeysExplorer.hideAll" data-xeokit-i18ntip="storeysExplorer.hideAllTip" data-tippy-content="Hide all storeys">Hide all</button>
             </div>
              <div class="xeokit-storeys xeokit-tree-panel"></div>
+        </div>
+    </div>
+    <div class="xeokit-tab xeokit-searchTab">
+        <a class="xeokit-i18n xeokit-tab-btn" href="#" >Search</a>
+        <div class="xeokit-tab-content">
+            <div class="xeokit-search xeokit-tree-panel" id="searchContent"></div>
         </div>
     </div>
 </div>`;
@@ -331,6 +338,12 @@ class BIMViewer extends Controller {
             showAllStoreysButtonElement: explorerElement.querySelector(".xeokit-showAllStoreys"),
             hideAllStoreysButtonElement: explorerElement.querySelector(".xeokit-hideAllStoreys"),
             storeysElement: explorerElement.querySelector(".xeokit-storeys")
+        });
+
+        this._searchExplorer = new SearchExplorer(this, {
+            enableMeasurements: this._enableMeasurements,
+            searchTabElement: explorerElement.querySelector(".xeokit-searchTab"),
+            searchElement: explorerElement.querySelector(".xeokit-search")
         });
 
         if (this._enablePropertiesInspector) {
@@ -736,7 +749,7 @@ class BIMViewer extends Controller {
             "xrayPickable": false,
             "selectedGlowThrough": true,
             "highlightGlowThrough": true,
-            "backgroundColor": [1.0, 1.0, 1.0],
+            "backgroundColor": [0, 0, 0],
             "externalMetadata": false,
             "dtxEnabled": false
         });
@@ -1207,7 +1220,20 @@ class BIMViewer extends Controller {
      * @param {Number[]} rgbColor Three-element array of RGB values, each in range ````[0..1]````.
      */
     setBackgroundColor(rgbColor) {
-        this.viewer.scene.canvas.backgroundColor = rgbColor;
+        const defaultWhiteColor = [0.95, 0.95, 1];
+    
+        //compare two arrays
+        const arraysEqual = (arr1, arr2) => {
+            return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+        };
+
+        if (arraysEqual(rgbColor, defaultWhiteColor)){
+            //avoid default white
+            this.viewer.scene.canvas.backgroundColor = [0.2588, 0.2588, 0.2588]; 
+        }
+        else {
+            this.viewer.scene.canvas.backgroundColor = rgbColor;
+        }
     }
 
     /**
@@ -1267,6 +1293,9 @@ class BIMViewer extends Controller {
         if (viewerState.expandStoreysTree) {
             this._storeysExplorer.expandTreeViewToDepth(viewerState.expandStoreysTree);
         }
+        if (viewerState.expandSearchTree) {
+            this._searchExplorer.expandTreeViewToDepth(viewerState.expandSearchTree);
+        }
         if (viewerState.setCamera) {
             this.setCamera(viewerState.setCamera);
         }
@@ -1308,6 +1337,8 @@ class BIMViewer extends Controller {
         this._objectsExplorer.showNodeInTreeView(objectId);
         this._classesExplorer.showNodeInTreeView(objectId);
         this._storeysExplorer.showNodeInTreeView(objectId);
+        this._searchExplorer.showNodeInTreeView(objectId);
+
         this.fire("openExplorer", {});
     }
 
@@ -1322,6 +1353,8 @@ class BIMViewer extends Controller {
         this._objectsExplorer.unShowNodeInTreeView();
         this._classesExplorer.unShowNodeInTreeView();
         this._storeysExplorer.unShowNodeInTreeView();
+        this._searchExplorer.unShowNodeInTreeView();
+
     }
 
     /**
@@ -1668,6 +1701,9 @@ class BIMViewer extends Controller {
             case "storeys":
                 tabSelector = "xeokit-storeysTab";
                 break;
+            case "search":
+                tabSelector = "xeokit-searchTab";
+                break;
             case "properties":
                 tabSelector = "xeokit-propertiesTab";
                 break;
@@ -1736,6 +1772,10 @@ class BIMViewer extends Controller {
         let storeysTab = this._explorerElement.querySelector(".xeokit-storeysTab");
         if (hasClass(storeysTab, activeClass)) {
             return "storeys";
+        }
+        let searchTab = this._explorerElement.querySelector(".xeokit-searchTab");
+        if (hasClass(searchTab, activeClass)) {
+            return "search";
         }
         let propertiesTab = this._inspectorElement.querySelector(".xeokit-propertiesTab");
         if (hasClass(propertiesTab, activeClass)) {
@@ -1980,6 +2020,8 @@ class BIMViewer extends Controller {
         this._objectsExplorer.setEnabled(enabled);
         this._classesExplorer.setEnabled(enabled);
         this._storeysExplorer.setEnabled(enabled);
+        this._searchExplorer.setEnabled(enabled);
+
 
         // Toolbar
 

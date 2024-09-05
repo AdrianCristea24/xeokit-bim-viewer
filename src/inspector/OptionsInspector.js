@@ -87,6 +87,13 @@ class OptionsInspector extends Controller {
                 <label for="renderLines">Render 2D/3D lines always</label>
             </div>
         `);
+
+        html.push(`
+            <div>
+                <label for="colorPicker">Select Background Color:</label>
+                <input type="color" id="colorPicker" name="colorPicker" value="#000000">
+            </div>
+        `);
         
         html.push(`</div>`);
         
@@ -96,6 +103,21 @@ class OptionsInspector extends Controller {
         const showM2Checkbox = document.getElementById('showM2');
         const renderLinesCheckbox = document.getElementById('renderLines');
         const viewer = this.viewer;
+        const colorPicker = document.getElementById('colorPicker');
+    
+        colorPicker.addEventListener('change', function(event) {
+            var hexColor = event.target.value;
+
+            hexColor = hexColor.replace(/^#/, '');
+
+            // Convert the hex values to integers and normalize them
+            const r = parseInt(hexColor.substring(0, 2), 16) / 255;
+            const g = parseInt(hexColor.substring(2, 4), 16) / 255;
+            const b = parseInt(hexColor.substring(4, 6), 16) / 255;
+
+            console.log('Selected color as normalized RGB array:', [r, g, b]);
+            viewer.scene.canvas.backgroundColor = [r, g, b]; 
+        });
     
         showM2Checkbox.addEventListener('change', function() {
             console.log('Show m2:', this.checked);
