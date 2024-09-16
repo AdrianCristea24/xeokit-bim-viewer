@@ -1,4 +1,4 @@
-import {TreeViewPlugin} from "@xeokit/xeokit-sdk/dist/xeokit-sdk.es.js";
+import {TreeViewPlugin} from "../../../xeokit-sdk/dist/xeokit-sdk.es.js";
 import {TreeViewContextMenu} from "../contextMenus/TreeViewContextMenu.js";
 import {Controller} from "../Controller.js";
 

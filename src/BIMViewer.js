@@ -77,7 +77,7 @@ function createExplorerTemplate(cfg) {
         </div>
     </div>
     <div class="xeokit-tab xeokit-searchTab">
-        <a class="xeokit-i18n xeokit-tab-btn" href="#" >Search</a>
+        <a class="xeokit-i18n xeokit-tab-btn" href="#" >Views</a>
         <div class="xeokit-tab-content">
             <div class="xeokit-search xeokit-tree-panel" id="searchContent"></div>
         </div>

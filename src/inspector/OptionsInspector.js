@@ -68,6 +68,8 @@ class OptionsInspector extends Controller {
     }
 
     _setPropertySets() {
+        const viewer = this.viewer;
+
         const html = [];
         html.push(`<div class="element-attributes">`);
         html.push(`<p class="subsubtitle">Custom Settings</p>`);
@@ -91,10 +93,10 @@ class OptionsInspector extends Controller {
         html.push(`
             <div>
                 <label for="colorPicker">Select Background Color:</label>
-                <input type="color" id="colorPicker" name="colorPicker" value="#000000">
+                <input type="color" id="colorPicker" name="colorPicker" value="#424242">
             </div>
         `);
-        
+
         html.push(`</div>`);
         
         this._propertiesElement.innerHTML = html.join("");
@@ -102,7 +104,6 @@ class OptionsInspector extends Controller {
         // Set up event listeners after the elements are added to the DOM
         const showM2Checkbox = document.getElementById('showM2');
         const renderLinesCheckbox = document.getElementById('renderLines');
-        const viewer = this.viewer;
         const colorPicker = document.getElementById('colorPicker');
     
         colorPicker.addEventListener('change', function(event) {

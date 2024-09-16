@@ -49,7 +49,21 @@ class SelectionTool extends Controller {
                         annotations.destroyAnnotation(pickResult.entity.id);
                         return;
                     }
-                    
+
+                    document.getElementById('inspector_toggle').checked = true;
+
+                    let measurementsTab = document.getElementsByClassName("xeokit-measurementsTab")[0];
+                    let propTab = document.getElementsByClassName("xeokit-propertiesTab")[0];
+                    let optionsTab = document.getElementsByClassName("xeokit-optionsTab")[0];
+
+                    if (propTab) {
+                        optionsTab.classList.remove('active');
+                        measurementsTab.classList.remove('active');
+                        propTab.classList.add('active');
+                    }
+
+                    parent.showObjectProperties(pickResult.entity.id);
+
                     if (this.viewer.scene._renderer.getAnno()){
                         const entity = pickResult.entity;
                         const aabb = entity.aabb;
