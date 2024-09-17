@@ -8,6 +8,9 @@ class SelectionTool extends Controller {
     constructor(parent, cfg) {
 
         super(parent);
+        this.selected = [];
+        this.ctrlPressed = false;
+
 
         if (!cfg.buttonElement) {
             throw "Missing config: buttonElement";
@@ -36,7 +39,28 @@ class SelectionTool extends Controller {
             }
         });
 
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Control') {
+                this.ctrlPressed = true;
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'Control') {
+                this.ctrlPressed = false;
+            }
+        });
+
+        this.viewer.cameraControl.on("pickedNothing", (e) => {
+            for(let i = 0; i < this.selected.length; i++) {
+                annotations.destroyAnnotation([this.selected[i]]);
+                this.viewer.scene.objects[this.selected[i]].selected = false;
+            }
+            this.selected = [];
+        });
+
         this.on("active", (active) => {
+            const viewer = this.viewer;
             if (active) {
                 buttonElement.classList.add("active");
                 this._onPick = this.viewer.cameraControl.on("picked", (pickResult) => {
@@ -44,11 +68,27 @@ class SelectionTool extends Controller {
                         return;
                     }
                     pickResult.entity.selected = !pickResult.entity.selected;
-
                     if (!pickResult.entity.selected){
-                        annotations.destroyAnnotation(pickResult.entity.id);
+
+                        let index = this.selected.indexOf(pickResult.entity.id);
+                        if (index !== -1) { 
+                            annotations.destroyAnnotation([this.selected[index]]);
+                            viewer.scene.objects[this.selected[index]].selected = false;
+                            this.selected.splice(index, 1);
+                        }
+
                         return;
                     }
+
+                    if (!this.ctrlPressed){
+                        for(let i = 0; i < this.selected.length; i++) {
+                            annotations.destroyAnnotation([this.selected[i]]);
+                            viewer.scene.objects[this.selected[i]].selected = false;
+                        }
+                        this.selected = [];
+                    }
+
+                    this.selected.push(pickResult.entity.id);
 
                     document.getElementById('inspector_toggle').checked = true;
 
@@ -107,6 +147,11 @@ class SelectionTool extends Controller {
         this.bimViewer.on("reset", () => {
             this.setActive(false);
         });
+
+        setTimeout(() => {
+            this.setActive(true);
+        }, 1000);
+
     }
 }
 

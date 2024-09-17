@@ -6,6 +6,8 @@ class ShowSpacesMode extends Controller {
     constructor(parent, cfg) {
 
         super(parent, cfg);
+        var changed = [];
+        const viewer = this.viewer;
 
         if (!cfg.buttonElement) {
             throw "Missing config: buttonElement";
@@ -25,6 +27,36 @@ class ShowSpacesMode extends Controller {
             if (this.getEnabled()) {
                 this.setActive(!this.getActive(), () => {
                 });
+
+                if (this.getActive()) {
+                    
+                    let classes = document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0];
+                    let inputs = classes.getElementsByTagName('input');  // Retrieve all input elements inside 'classes'
+                    
+                    Array.from(inputs).forEach(function(input) {
+                        if (input.type === 'checkbox' && !input.id.includes('IfcSpace')) {
+                            if (input.checked) {
+                                input.click();  
+                                changed.push(input);
+                            }
+                        }
+
+                        if (input.type === 'checkbox' && input.id.includes('IfcSpace') && !input.checked){
+                            input.click(); 
+                        }
+                    });
+                }
+                else{
+                    Array.from(changed).forEach(function(input) {
+                        if (input.checked){
+                            input.click();
+                        }
+                        input.click(); 
+
+                    });
+                    changed = [];
+                }
+
             }
             event.preventDefault();
         });

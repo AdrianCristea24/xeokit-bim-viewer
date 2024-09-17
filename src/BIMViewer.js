@@ -474,6 +474,7 @@ class BIMViewer extends Controller {
             busyModalBackdropElement: busyModelBackdropElement
         });
 
+        this._selectionTool.setActive(true);
         this._threeDMode.setActive(true);
         this._firstPersonMode.setActive(false);
         this._navCubeMode.setActive(true);

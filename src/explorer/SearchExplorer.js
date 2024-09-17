@@ -243,12 +243,12 @@ class SearchExplorer extends Controller {
         html.push(`<div class="element-attributes">`);
         html.push(`
             <div>
-                <span id="highlightLabel">Highlight</span>
+                <span id="highlightLabel" style="color: gray">Highlight</span>
                 <label class="switch">
                     <input type="checkbox" id="toggleDiv" checked>
                     <span class="slider round"></span>
                 </label>
-                <span id="viewsLabel" style="color: gray">Views</span>
+                <span id="viewsLabel" style="color: white">Views</span>
             </div>
             <br>
 
