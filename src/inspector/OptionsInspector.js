@@ -97,6 +97,14 @@ class OptionsInspector extends Controller {
             </div>
         `);
 
+        html.push(`
+            <div class="slider-container">
+                <label for="lens" class="slider-label">Lens</label>
+                <input type="range" id="lens" name="lens" min="10" max="120" value="73" class="slider-option" style="width: 200px">
+                <div id="lensValue" class="slider-output"></div>
+            </div>
+        `);
+
         html.push(`</div>`);
         
         this._propertiesElement.innerHTML = html.join("");
@@ -105,13 +113,54 @@ class OptionsInspector extends Controller {
         const showM2Checkbox = document.getElementById('showM2');
         const renderLinesCheckbox = document.getElementById('renderLines');
         const colorPicker = document.getElementById('colorPicker');
+        const lens = document.getElementById('lens');
+        const lensValue = document.getElementById('lensValue');
+
+        function updateSliderValue(value, element, elementLabel) {
+            elementLabel.innerHTML = value;
+            elementLabel.style.display = 'block';
+        
+            const container = element.parentElement;
+            const containerWidth = container.offsetWidth;
+        
+            const sliderWidth = element.offsetWidth;
+        
+            const sliderPosition = ((value - element.min) / (element.max - element.min)) * sliderWidth;
+        
+            const labelWidth = elementLabel.offsetWidth;
+            const newPosition = sliderPosition - (labelWidth / 2) + (sliderWidth / 2) - 15;
+        
+            if (newPosition < 0) {
+                elementLabel.style.left = '0px';
+            } else if (newPosition + labelWidth > containerWidth) {
+                elementLabel.style.left = `${containerWidth - labelWidth}px`;
+            } else {
+                elementLabel.style.left = `${newPosition}px`;
+            }
+        }
+
+        lens.addEventListener('input', function(event) {
+            const value = event.target.value;
+            updateSliderValue(value, lens, lensValue);
+        });
+
+        lens.addEventListener('change', function() {
+            lensValue.style.display = 'none'; 
+            var value = event.target.value;
+
+            var camera = viewer.scene.camera;
+            camera.perspective.fov = value;
+        });
+
+        lens.addEventListener('blur', function() {
+            lensValue.style.display = 'none';
+        });
     
         colorPicker.addEventListener('change', function(event) {
             var hexColor = event.target.value;
 
             hexColor = hexColor.replace(/^#/, '');
 
-            // Convert the hex values to integers and normalize them
             const r = parseInt(hexColor.substring(0, 2), 16) / 255;
             const g = parseInt(hexColor.substring(2, 4), 16) / 255;
             const b = parseInt(hexColor.substring(4, 6), 16) / 255;

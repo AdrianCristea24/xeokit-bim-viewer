@@ -603,13 +603,47 @@ input:checked + .slider:before {
     margin: 8px 4px; /* Slightly reduced margin */
     cursor: pointer;
     border-radius: 16px; /* Slightly smaller rounded corners */
-    transition: background-color 0.3s, box-shadow 0.3s; /* Smooth hover transition */
+    transition: background-color 0.3s, box-shadsow 0.3s; /* Smooth hover transition */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for a modern look */
 }
 
 .ViewButtons:hover {
     background-color: rgb(215, 215, 215); /* Same color as the enabled state of the toggle */
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Increase shadow on hover */
+}
+
+.slider-container {
+    display: flex;
+    align-items: center; /* Align label and slider vertically */
+    width: 100%;
+    max-width: 400px; /* Set a maximum width for the entire container */
+    margin: 20px;
+    position: relative;
+}
+
+.slider-label {
+    font-size: 16px;
+    margin-right: 15px; /* Add space between the label and the slider */
+    min-width: 50px; /* Ensure label has a minimum width */
+    white-space: nowrap; /* Prevent the label text from wrapping */
+}
+
+.slider-option {
+    width: 200px; /* Set a fixed width for the slider */
+}
+
+.slider-output {
+    position: absolute;
+    top: -30px; /* Position the value above the slider */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fff;
+    color: #0056b3;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    display: none; /* Hidden by default */
 }
 
 
