@@ -2,6 +2,8 @@ import {math, XKTLoaderPlugin} from "@xeokit/xeokit-sdk/dist/xeokit-sdk.es.js";
 import {Controller} from "../Controller.js";
 import {ModelsContextMenu} from "../contextMenus/ModelsContextMenu.js";
 import {XKTLoaderPlugin as XKTREAL} from "../../../xeokit-sdk/dist/xeokit-sdk.es.js";
+import {TreeViewPlugin} from "../../../xeokit-sdk/dist/xeokit-sdk.es.js";
+
 
 
 const tempVec3a = math.vec3();
@@ -69,6 +71,15 @@ class ModelsExplorer extends Controller {
         if (!this._modelsTabButtonElement) {
             throw "Missing DOM element: ,xeokit-tab-btn";
         }
+
+        const modelsElement = cfg.modelsElement;
+
+        this._treeView = new TreeViewPlugin(this.viewer, {
+            containerElement: modelsElement,
+            autoAddModels: false,
+            hierarchy: "models",
+            autoExpandDepth: 1
+        });
 
         this._dataSource = new BIMViewerDataSource(this.server);
 

@@ -110,12 +110,24 @@ function createToolbarTemplate(cfg = {}) {
         <button type="button" class="xeokit-i18n xeokit-hide xeokit-btn fa fa-eraser fa-2x disabled" data-xeokit-i18ntip="toolbar.hideObjectsTip" data-tippy-content="Hide objects"></button>
         <!-- Select tool button -->
         <button type="button" class="xeokit-i18n xeokit-select xeokit-btn fa fa-mouse-pointer fa-2x disabled" data-xeokit-i18ntip="toolbar.selectObjectsTip" data-tippy-content="Select objects"></button>    
-          <!-- Marquee select tool button -->
+        <!-- Marquee select tool button -->
         <button type="button" class="xeokit-i18n xeokit-marquee xeokit-btn fas fa-object-group fa-2x disabled" data-xeokit-i18ntip="toolbar.marqueeSelectTip" data-tippy-content="Marquee select objects"></button>`
         + (cfg.enableMeasurements ? `<!-- Measure distance tool button -->
-        <button type="button" class="xeokit-i18n xeokit-measure-distance xeokit-btn fa fa-ruler fa-2x disabled" data-xeokit-i18ntip="toolbar.measureDistanceTip" data-tippy-content="Measure distance"></button>  
-          <!-- Measure angle tool button -->
-        <button type="button" class="xeokit-i18n xeokit-measure-angle xeokit-btn fa fa-chevron-left fa-2x disabled" data-xeokit-i18ntip="toolbar.measureAngleTip" data-tippy-content="Measure angle"></button>`
+        <button type="button" class="xeokit-i18n xeokit-measure-distance xeokit-btn fa fa-ruler fa-2x disabled" data-xeokit-i18ntip="toolbar.measureDistanceTip" data-tippy-content="Measure distance">
+        <svg fill="#000000" height="16px" width="16px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512.001 512.001" xml:space="preserve">
+            <g>
+                <g>
+                    <path d="M509.013,99.064L412.937,2.987c-3.984-3.983-10.44-3.983-14.425,0L2.987,398.513c-3.983,3.983-3.983,10.441,0,14.424    l96.076,96.077c1.991,1.992,4.602,2.987,7.212,2.987s5.221-0.995,7.212-2.987l395.526-395.526    c1.912-1.912,2.987-4.506,2.987-7.212C512.001,103.57,510.926,100.976,509.013,99.064z M106.275,487.377l-81.653-81.653    l41.98-41.98l15.228,15.229c1.992,1.992,4.602,2.987,7.212,2.987c2.61,0,5.221-0.996,7.212-2.987    c3.983-3.983,3.984-10.441,0-14.424L81.025,349.32l41.979-41.979l28.554,28.554c1.992,1.992,4.602,2.987,7.212,2.987    c2.61,0,5.221-0.995,7.212-2.987c3.983-3.983,3.983-10.441,0-14.425l-28.554-28.554l41.979-41.979l15.229,15.23    c1.992,1.992,4.602,2.987,7.212,2.987s5.221-0.995,7.212-2.987c3.983-3.983,3.983-10.441,0-14.425l-15.229-15.229l41.979-41.979    l37.671,37.671c1.992,1.992,4.602,2.987,7.212,2.987c2.61,0,5.22-0.995,7.212-2.987c3.983-3.983,3.983-10.441,0-14.425    l-37.671-37.671l41.98-41.98l15.228,15.229c1.992,1.992,4.602,2.987,7.212,2.987s5.22-0.996,7.212-2.987    c3.983-3.983,3.983-10.441,0-14.424l-15.229-15.229l41.98-41.98l37.67,37.671c1.992,1.992,4.602,2.987,7.212,2.987    s5.22-0.996,7.212-2.987c3.983-3.983,3.983-10.441,0-14.424l-37.671-37.671l42.686-42.68l81.653,81.653L106.275,487.377z"/>
+                </g>
+            </g>
+        </svg>
+        </button>  
+        <!-- Measure angle tool button -->
+        <button type="button" class="xeokit-i18n xeokit-measure-angle xeokit-btn fa fa-chevron-left fa-2x disabled" data-xeokit-i18ntip="toolbar.measureAngleTip" data-tippy-content="Measure angle">
+            <svg fill="#000000" width="16px" height="16px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30.531 29.469l-28.001-27.999c-0.136-0.136-0.323-0.22-0.531-0.22-0.414 0-0.75 0.336-0.75 0.75 0 0 0 0 0 0.001v-0 28c0 0.414 0.336 0.75 0.75 0.75h28c0.415-0 0.751-0.336 0.751-0.751 0-0.207-0.084-0.395-0.22-0.53v0zM2.75 29.25v-25.439l4.197 4.197-1.485 1.531c-0.135 0.136-0.218 0.323-0.218 0.529 0 0.414 0.336 0.75 0.75 0.75 0.214 0 0.407-0.090 0.544-0.234l0-0 1.47-1.515 3.931 3.931-1.47 1.47c-0.14 0.136-0.227 0.327-0.227 0.538 0 0.414 0.336 0.75 0.75 0.75 0.211 0 0.401-0.087 0.537-0.227l1.47-1.47 3.939 3.939-1.47 1.469c-0.135 0.136-0.218 0.323-0.218 0.529 0 0.415 0.336 0.751 0.751 0.751 0.206 0 0.393-0.083 0.528-0.218l1.471-1.47 3.938 3.938-1.47 1.47c-0.136 0.136-0.22 0.324-0.22 0.531 0 0.415 0.336 0.751 0.751 0.751 0.207 0 0.395-0.084 0.531-0.22l1.47-1.47 5.188 5.188zM6.53 16.47c-0.136-0.136-0.323-0.22-0.531-0.22-0.414 0-0.75 0.336-0.75 0.75 0 0 0 0 0 0.001v-0 9c0 0.414 0.336 0.75 0.75 0.75h9c0 0 0 0 0 0 0.414 0 0.75-0.336 0.75-0.75 0-0.207-0.084-0.395-0.22-0.531v0zM6.75 25.25v-6.439l6.439 6.439z"/>
+            </svg>
+        </button>`
             : ` `)
         + `<!-- section tool button -->
         <button type="button" class="xeokit-i18n xeokit-section xeokit-btn fa fa-cut fa-2x disabled" data-xeokit-i18ntip="toolbar.sliceObjectsTip" data-tippy-content="Slice objects">
@@ -156,23 +168,24 @@ function createInspectorTemplate() {
 function initTabs(containerElement) {
 
     const tabsClass = 'xeokit-tabs';
+    const tabsClassCustom = 'xeokit-tabscustom';
     const tabClass = 'xeokit-tab';
     const tabButtonClass = 'xeokit-tab-btn';
     const activeClass = 'active';
-
+    
     // Activates the chosen tab and deactivates the rest
     function activateTab(chosenTabElement) {
         let tabList = chosenTabElement.parentNode.querySelectorAll('.' + tabClass);
         for (let i = 0; i < tabList.length; i++) {
             let tabElement = tabList[i];
             if (tabElement.isEqualNode(chosenTabElement)) {
-                tabElement.classList.add(activeClass)
+                tabElement.classList.add(activeClass);
             } else {
-                tabElement.classList.remove(activeClass)
+                tabElement.classList.remove(activeClass);
             }
         }
     }
-
+    
     // Initialize each tabbed container
     let tabbedContainers = containerElement.querySelectorAll('.' + tabsClass);
     for (let i = 0; i < tabbedContainers.length; i++) {
@@ -188,7 +201,26 @@ function initTabs(containerElement) {
                     return;
                 }
                 activateTab(event.target.parentNode);
-            })
+            });
+        }
+    }
+    
+    // Initialize each tabbed container
+    tabbedContainers = containerElement.querySelectorAll('.' + tabsClassCustom);
+    for (let i = 0; i < tabbedContainers.length; i++) {
+        let tabbedContainer = tabbedContainers[i];
+        let tabList = tabbedContainer.querySelectorAll('.' + tabClass);
+        activateTab(tabList[0]);
+        for (let i = 0; i < tabList.length; i++) {
+            let tabElement = tabList[i];
+            let tabButton = tabElement.querySelector('.' + tabButtonClass);
+            tabButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                if (this.classList.contains("disabled")) {
+                    return;
+                }
+                activateTab(event.target.parentNode);
+            });
         }
     }
 }
@@ -226,6 +258,8 @@ class BIMViewer extends Controller {
         if (!cfg.navCubeCanvasElement) {
             throw "Config expected: navCubeCanvasElement";
         }
+
+        cfg.enableMeasurements = true;
 
         const canvasElement = cfg.canvasElement;
         const explorerElement = cfg.explorerElement;

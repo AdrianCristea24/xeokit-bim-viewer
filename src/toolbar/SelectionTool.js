@@ -39,13 +39,21 @@ class SelectionTool extends Controller {
             }
         });
 
-        document.addEventListener('keydown', (event) => {
+        document.body.setAttribute('tabindex', '0');
+
+        // Focus the body when mouse is clicked anywhere
+        document.addEventListener('mousedown', () => {
+            document.body.focus(); // Now the body can receive focus
+        });
+    
+        // Add the keydown listener to the body
+        document.body.addEventListener('keydown', (event) => {
             if (event.key === 'Control') {
-                this.ctrlPressed = true;
+                this.ctrlPressed = true;  // Assuming you're within a class; otherwise, handle 'this'
             }
         });
-
-        document.addEventListener('keyup', (event) => {
+    
+        document.body.addEventListener('keyup', (event) => {
             if (event.key === 'Control') {
                 this.ctrlPressed = false;
             }

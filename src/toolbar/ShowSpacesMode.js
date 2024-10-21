@@ -4,17 +4,17 @@ import {Controller} from "../Controller.js";
 class ShowSpacesMode extends Controller {
 
     constructor(parent, cfg) {
-
+    
         super(parent, cfg);
         var changed = [];
-        const viewer = this.viewer;
-
+        this.viewer;
+    
         if (!cfg.buttonElement) {
             throw "Missing config: buttonElement";
         }
-
+    
         this._buttonElement = cfg.buttonElement;
-
+    
         this.on("enabled", (enabled) => {
             if (!enabled) {
                 this._buttonElement.classList.add("disabled");
@@ -22,49 +22,63 @@ class ShowSpacesMode extends Controller {
                 this._buttonElement.classList.remove("disabled");
             }
         });
-
+    
+        this.classTree = this.bimViewer._classesExplorer._treeView;
+    
         this._buttonElement.addEventListener("click", (event) => {
             if (this.getEnabled()) {
                 this.setActive(!this.getActive(), () => {
                 });
-
+    
                 if (this.getActive()) {
                     
-                    let classes = document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0];
-                    let inputs = classes.getElementsByTagName('input');  // Retrieve all input elements inside 'classes'
+                    // CLASSES STATE
+                    const classes = document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0].getElementsByTagName('input');
                     
-                    Array.from(inputs).forEach(function(input) {
+                    const switchId = classes[0].id.replace('checkbox-', 'switch-');
+                    const switchElement = document.getElementById(switchId);
+                
+                    if (switchElement && switchElement.classList.contains('plus')) {
+                        this.classTree._expandSwitchElement(switchElement)
+                    }
+                    let ifcspace = '';
+                    
+                    Array.from(classes).forEach(function(input) {
                         if (input.type === 'checkbox' && !input.id.includes('IfcSpace')) {
                             if (input.checked) {
                                 input.click();  
                                 changed.push(input);
                             }
                         }
-
-                        if (input.type === 'checkbox' && input.id.includes('IfcSpace') && !input.checked){
-                            input.click(); 
+    
+                        if (input.type === 'checkbox' && input.id.includes('IfcSpace')){
+                            ifcspace = input;
                         }
                     });
+    
+                    if (ifcspace && !ifcspace.checked){
+                        ifcspace.click();
+                    }
                 }
-                else{
+                else {
                     Array.from(changed).forEach(function(input) {
                         if (input.checked){
                             input.click();
                         }
                         input.click(); 
-
+    
                     });
                     changed = [];
                 }
-
+    
             }
             event.preventDefault();
         });
-
+    
         this.bimViewer.on("reset", () => {
             this.setActive(false); // IfcSpaces hidden by default
         });
-
+    
         this.viewer.scene.on("modelLoaded", (modelId) => {
             if (!this._active) {
                 const objectIds = this.viewer.metaScene.getObjectIDsByType("IfcSpace");
@@ -75,7 +89,7 @@ class ShowSpacesMode extends Controller {
         this._active = false;
         this._buttonElement.classList.remove("active");
     }
-
+    
     setActive(active) {
         if (this._active === active) {
             return;
@@ -91,7 +105,7 @@ class ShowSpacesMode extends Controller {
             this.fire("active", this._active);
         }
     }
-
+    
     _enterShowSpacesMode() {
         const viewer = this.viewer;
         const scene = viewer.scene;
@@ -99,7 +113,7 @@ class ShowSpacesMode extends Controller {
         const objectIds = metaScene.getObjectIDsByType("IfcSpace");
         scene.setObjectsCulled(objectIds, false);
     }
-
+    
     _exitShowSpacesMode() {
         const viewer = this.viewer;
         const scene = viewer.scene;

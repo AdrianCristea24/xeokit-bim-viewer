@@ -145,6 +145,20 @@ class SearchExplorer extends Controller {
         return metaObject;
     }
 
+    getProjectName(){
+        let projectId = new URLSearchParams(window.location.search).get('projectId') ?? 0;
+    
+        if (!projectId){
+            const regex = /\/projects\/([^\/]+)/;
+            const match = window.location.href.match(regex);
+        
+            projectId = match && match[1] ? match[1] : 'adrian';
+        }
+    
+        console.log(projectId); 
+        return projectId;
+    }
+
     loadButtonsView(){
         const localFavs = document.getElementById('localFavsViews');
         const projectId = new URLSearchParams(window.location.search).get('projectId');
@@ -562,7 +576,7 @@ class SearchExplorer extends Controller {
 
     getCurrentView() {
         // CAMERA STATE
-        const camera = bimViewer.viewer.scene.camera;
+        const camera = this.bimViewer.viewer.scene.camera;
         let cameraState = {
             eye: camera._eye,
             look: camera._look,
@@ -572,7 +586,7 @@ class SearchExplorer extends Controller {
         // Function to toggle parent elements (if closed) and get the checkbox state
         const getElementState = (checkboxId) => {
             let switchId = checkboxId.replace('checkbox', 'switch');
-            let switchElement = document.getElementById(switchId);
+            document.getElementById(switchId);
         
             let checkboxElement = document.getElementById(checkboxId);
         
@@ -583,18 +597,31 @@ class SearchExplorer extends Controller {
                     checked: checkboxElement.checked
                 };
             }
-
+    
             return checkboxState;
         };
+        // MODELS STATE
+        let modelState = [];
+        this.expended = [];
+        let modelTree = this.bimViewer._modelsExplorer._treeView;
+        let modelArr = document.getElementsByClassName('xeokit-form-check');
+    
+        for(let i=0; i<modelArr.length; i++){
+            let model = modelArr[i].getElementsByTagName('input')[0];
+            const modelInfo = getElementState(model.id);
+            if (modelInfo) {
+                modelState.push(modelInfo);
+            }
+        }
     
         // STOREYS STATE
         let storeysState = [];
         this.expended = [];
-        let storeysTree = bimViewer._storeysExplorer._treeView;
-
+        let storeysTree = this.bimViewer._storeysExplorer._treeView;
+    
         const storeys = document.getElementsByClassName('xeokit-storeys xeokit-tree-panel')[0].getElementsByTagName('input');
         this.processStateAndExpand(storeys, storeysTree);
-
+    
         Array.from(storeys).forEach(storey => {
             const storeyInfo = getElementState(storey.id);
             if (storeyInfo) {
@@ -602,13 +629,13 @@ class SearchExplorer extends Controller {
             }
         });
         this.collapseParents(this.expended, storeysTree);
-
+    
     
         // CLASSES STATE
         let classesState = [];
         this.expended = [];
-        let classTree = bimViewer._classesExplorer._treeView;
-
+        let classTree = this.bimViewer._classesExplorer._treeView;
+    
         const classes = document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0].getElementsByTagName('input');
         this.processStateAndExpand(classes, classTree);
         
@@ -619,16 +646,16 @@ class SearchExplorer extends Controller {
             }
         });
         this.collapseParents(this.expended, classTree);
-
+    
     
         // OBJECTS STATE
         let objectsState = [];
         this.expended = [];
-        let objectTree = bimViewer._objectsExplorer._treeView;
-
+        let objectTree = this.bimViewer._objectsExplorer._treeView;
+    
         const objects = document.getElementsByClassName('xeokit-objects xeokit-tree-panel')[0].getElementsByTagName('input');
         this.processStateAndExpand(objects, objectTree);
-
+    
         Array.from(objects).forEach(objectItem => {
             const objectInfo = getElementState(objectItem.id);
             if (objectInfo) {
@@ -636,11 +663,12 @@ class SearchExplorer extends Controller {
             }
         });
         this.collapseParents(this.expended, objectTree);
-
+    
     
         // Combine all states into a bigger object
         const fullState = {
             cameraState: cameraState,
+            modelsState: modelState,
             storeysState: storeysState,
             classesState: classesState,
             objectsState: objectsState
@@ -648,49 +676,75 @@ class SearchExplorer extends Controller {
     
         return fullState;
     }
-
+    
     setCurrentView(fullState) {
-        // Update the camera state
-        bimViewer.viewer.scene.camera.eye = [fullState.cameraState.eye[0], fullState.cameraState.eye[1], fullState.cameraState.eye[2]];
-        bimViewer.viewer.scene.camera.look = [fullState.cameraState.look[0], fullState.cameraState.look[1], fullState.cameraState.look[2]];
-        bimViewer.viewer.scene.camera.up = [fullState.cameraState.up[0], fullState.cameraState.up[1], fullState.cameraState.up[2]];
-    
-        // Process storeys state
+        // Process Models state
         this.expended = [];
-        let storeyTree = bimViewer._storeysExplorer._treeView;
-        this.processStateAndExpand(fullState.storeysState, storeyTree);
-        fullState.storeysState.forEach(storey => {
-            const target = document.getElementById(storey.id);
-            if (target) {
-                storeyTree._changeStructure(target, storey.checked);
-            }
-        });
-        this.collapseParents(this.expended, storeyTree);
+        let modelsTree = this.bimViewer._modelsExplorer._treeView;
     
-        // Process objects state
-        this.expended = [];
-        let objectTree = bimViewer._objectsExplorer._treeView;
-        this.processStateAndExpand(fullState.objectsState, objectTree);
-        fullState.objectsState.forEach(object => {
-            const target = document.getElementById(object.id);
-            if (target) {
-                objectTree._changeStructure(target, object.checked);
-            }
-        });
-        this.collapseParents(this.expended, objectTree);
+        if (fullState.modelsState[0]){
+            this.bimViewer._modelsExplorer.unloadAllModels();
     
-        // Process classes state
-        fullState.classesState.forEach(classObj => {
-            if (classObj.id && !classObj.checked) {
-                this.chnageClassesState(classObj.id, classObj.checked);
-            }
-        });
+            fullState.modelsState.forEach(model => {
+                const target = document.getElementById(model.id);
+    
+                if (model.checked) {
+    
+                    this.bimViewer._modelsExplorer.loadModel(model.id,
+                    () => { // Done
+                        console.log('done load');
+                        // Process storeys state
+                        this.expended = [];
+                        let storeyTree = this.bimViewer._storeysExplorer._treeView;
+                    
+                        this.processStateAndExpand(fullState.storeysState, storeyTree);
+                        fullState.storeysState.forEach(storey => {
+                            const target = document.getElementById(storey.id);
+                            if (target) {
+                                storeyTree._changeStructure(target, storey.checked);
+                            }
+                        });
+                        this.collapseParents(this.expended, storeyTree);
+                    
+                        // Process objects state
+                        this.expended = [];
+                        let objectTree = this.bimViewer._objectsExplorer._treeView;
+                        this.processStateAndExpand(fullState.objectsState, objectTree);
+                        fullState.objectsState.forEach(object => {
+                            const target = document.getElementById(object.id);
+                            if (target) {
+                                objectTree._changeStructure(target, object.checked);
+                            }
+                        });
+                        this.collapseParents(this.expended, objectTree);
+                    
+                        // Process classes state
+                        fullState.classesState.forEach(classObj => {
+                            if (classObj.id && !classObj.checked) {
+                                this.chnageClassesState(classObj.id, classObj.checked);
+                            }
+                        });
+                        console.log('show camera');
+                        // Update the camera state
+                        this.bimViewer.viewer.scene.camera.eye = [fullState.cameraState.eye[0], fullState.cameraState.eye[1], fullState.cameraState.eye[2]];
+                        this.bimViewer.viewer.scene.camera.look = [fullState.cameraState.look[0], fullState.cameraState.look[1], fullState.cameraState.look[2]];
+                        this.bimViewer.viewer.scene.camera.up = [fullState.cameraState.up[0], fullState.cameraState.up[1], fullState.cameraState.up[2]];
+                    },
+                    () => { // Error - recover and attempt to load next model
+                        console.log('error load');
+                    });
+    
+                }
+               
+            });
+        }
+    
     }
 
     loadButtonsHighlight(localFavs,saves) {
-        const projectId = new URLSearchParams(window.location.search).get('projectId');
+        const projectId = this.getProjectName();
         localFavs.innerHTML = '';
-
+    
         saves.forEach(save => {
             // Create a container div for each project
             const projectContainer = document.createElement('div');
@@ -713,26 +767,26 @@ class SearchExplorer extends Controller {
                 img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAAgAAADAAAAAElEQVR42mP8//8/AwAB/AF0KCcAI/9U+QzIAAAABJRU5ErkJggg==';
             }
         
-
+    
             const viewer = this.viewer;
             button.addEventListener('click', function() {
                 let freqMap = {};
-
+    
                 document.getElementById('search-elements').innerHTML = save.content;
-
+    
                 for (const key in viewer.scene.objects) {
                     viewer.scene.objects[key].colorize = undefined;
                 }
-
+    
                 // Reattach event listeners for trash
                 const trashIcons = document.getElementsByClassName('trash-icon');
                 Array.from(trashIcons).forEach(trashIcon => {
                     let idEntity = trashIcon.id.replace('trash-', '');
                     let container = document.getElementById(`container-${idEntity}`);
-
+    
                     trashIcon.addEventListener('click', function(event) {
                         event.preventDefault();
-
+    
                         const childCheckboxes = container.querySelectorAll('input[type="checkbox"]');
                         childCheckboxes.forEach(childCheckbox => {
                             if (childCheckbox.name == "single"){
@@ -740,24 +794,24 @@ class SearchExplorer extends Controller {
                                 viewer.scene.objects[childId].colorize = undefined;
                             }
                         });
-
+    
                         if (container) {
                             container.remove();
                         }
-
+    
                         if (document.getElementById('container-container').getElementsByTagName('div').length == 0){
                             document.getElementById('favoriteButton').style.display = 'none';
                         }
                     });
-
+    
                     let toggleAnchor = document.getElementById(`switch-tree-${idEntity}`);
                     let parentItem = document.getElementsByClassName(`checkbox-${idEntity}`)[0];
-
+    
                     if (toggleAnchor){
                         let childrenContainer = document.getElementById(`children-${idEntity}`);
                         let chidDiv = childrenContainer.getElementsByTagName('div');
                         let iconSpan = toggleAnchor.querySelector('.icon i');
-
+    
                         toggleAnchor.addEventListener('click', function (event) {
                             event.preventDefault(); // Prevent the default link behavior
                 
@@ -777,7 +831,7 @@ class SearchExplorer extends Controller {
                                 iconSpan.classList.add('fa-minus');
                             }
                         });
-
+    
                         if (parentItem) {
                             if (parentItem.name == 'parent') {
                                 parentItem.addEventListener('change', (event) => {
@@ -785,17 +839,17 @@ class SearchExplorer extends Controller {
                                     if (!event.target.checked) {
                                         checked = false;
                                     }
-
+    
                                     let props = chidDiv; 
-
+    
                                     for (let i = 0; i < props.length; i++) {
                                         let input = props[i].getElementsByTagName('input')[0];
                                         let idEntity = input.className.replace('checkbox-', '');
-
+    
                                         if(input){
                                             let entityTmp = viewer.scene.objects[idEntity];
                                             let checkboxes = document.getElementsByClassName(`checkbox-${entityTmp.id}`);
-
+    
                                             for (let i = 0; i < checkboxes.length; i++) {
                                                 if (!checked) {
                                                     entityTmp.colorize = undefined;
@@ -807,18 +861,17 @@ class SearchExplorer extends Controller {
                                             }
                                         }
                                     }
-
+    
                                 });
                             }
                         }
-
+    
                     }
-
+    
                     let checkbox = container.getElementsByTagName('input')[0];
                     const checkboxes = document.getElementsByClassName(checkbox.className);
                     
                     if (!freqMap[idEntity]) {
-                        console.log(checkboxes);
                         Array.from(checkboxes).forEach(checkboxItem => {
                             if (checkboxItem) {
                                 let entityTmp = viewer.scene.objects[idEntity];
@@ -830,9 +883,9 @@ class SearchExplorer extends Controller {
                                         if (!event.target.checked) {
                                             checked = false;
                                         }
-
+    
                                         let checkboxes = document.getElementsByClassName(`checkbox-${idEntity}`);
-
+    
                                         for (let i = 0; i < checkboxes.length; i++) {
                                             if (!checked) {
                                                 entityTmp.colorize = undefined;
@@ -842,28 +895,28 @@ class SearchExplorer extends Controller {
                                                 checkboxes[i].checked = true;
                                             }
                                         }
-
+    
                                     });
                                 }
                                 else {
                                     let childrenContainer = document.getElementById(`children-${idEntity}`);
                                     let chidDiv = childrenContainer.getElementsByTagName('div');
                                     let props = chidDiv; 
-
+    
                                     for (let i = 0; i < props.length; i++) {
                                         let checkboxItem = props[i].getElementsByTagName('input')[0];
                                         let idEntity = checkboxItem.className.replace('checkbox-', '');
                                         let entityTmp = viewer.scene.objects[idEntity];
                                         entityTmp.colorize = checkboxItem.id.split(',').map(parseFloat);
-
+    
                                         checkboxItem.addEventListener('change', (event) => {
                                             let checked = true;
                                             if (!event.target.checked) {
                                                 checked = false;
                                             }
-
+    
                                             let checkboxes = document.getElementsByClassName(`checkbox-${idEntity}`);
-
+    
                                             for (let i = 0; i < checkboxes.length; i++) {
                                                 if (!checked) {
                                                     entityTmp.colorize = undefined;
@@ -873,9 +926,9 @@ class SearchExplorer extends Controller {
                                                     checkboxes[i].checked = true;
                                                 }
                                             }
-
+    
                                         });
-
+    
                                     }
                                 }
                             }
@@ -883,10 +936,11 @@ class SearchExplorer extends Controller {
                         freqMap[idEntity] = 1;
                     }
                 });
-
-
+    
+    
             });
-
+            const bimViewer = this.bimViewer;
+    
             button.addEventListener('contextmenu', function(event) {
                 event.preventDefault();
             
@@ -911,14 +965,17 @@ class SearchExplorer extends Controller {
                 deleteOption.style.cursor = 'pointer';
             
                 // Delete option event
+                const bimV = bimViewer;
                 deleteOption.addEventListener('click', function() {
                     let saves = JSON.parse(localStorage.getItem(projectId)) || [];
                     let updatedProjects = saves.filter(savedProject => savedProject.name !== button.innerHTML);
             
                     localStorage.setItem(projectId, JSON.stringify(updatedProjects));
                     saves = JSON.parse(localStorage.getItem(projectId)) || [];
-                    bimViewer._searchExplorer.loadButtonsHighlight(localFavs, saves);
-
+    
+                    bimV._searchExplorer.loadButtonsHighlight(localFavs, saves);
+                    let modelsTree = bimV._modelsExplorer._treeView;
+    
                     document.body.removeChild(contextMenu);
                     button.remove(); 
                 });
@@ -932,7 +989,7 @@ class SearchExplorer extends Controller {
                     document.removeEventListener('click', closeContextMenu);
                 }, { once: true });
             });
-
+    
             projectContainer.appendChild(img);
             projectContainer.appendChild(button);
         

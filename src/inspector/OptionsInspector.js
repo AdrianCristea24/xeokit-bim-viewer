@@ -61,7 +61,7 @@ class OptionsInspector extends Controller {
         const html = [],
         localizedText = this.viewer.localeService.translate('OptionsInspector.noObjectSelectedWarning') || 'No measurements.';
         html.push(`<div class="element-attributes">`);
-        html.push(`<p class="xeokit-i18n subsubtitle no-object-selected-warning" data-xeokit-i18n="OptionsInspector.noObjectSelectedWarning">${localizedText}</p>`);
+        html.push(`<p id='nomeasuretext' class="xeokit-i18n subsubtitle no-object-selected-warning" data-xeokit-i18n="OptionsInspector.noObjectSelectedWarning">${localizedText}</p>`);
         html.push(`</div>`);
         const htmlStr = html.join("");
        this._propertiesElement.innerHTML = htmlStr;
@@ -69,8 +69,19 @@ class OptionsInspector extends Controller {
 
     _setPropertySets() {
         const viewer = this.viewer;
-
+    
         const html = [];
+        html.push(`<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>xeokit BIM Viewer</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        </head>
+        
+        <body>
+            <input type="checkbox" id="inspector_toggle"/>
+        </body>`);
         html.push(`<div class="element-attributes">`);
         html.push(`<p class="subsubtitle">Custom Settings</p>`);
         
@@ -139,24 +150,24 @@ class OptionsInspector extends Controller {
             }
         }
 
-        lens.addEventListener('input', function(event) {
+        lens.addEventListener('input', function (event) {
             const value = event.target.value;
             updateSliderValue(value, lens, lensValue);
         });
 
-        lens.addEventListener('change', function() {
-            lensValue.style.display = 'none'; 
+        lens.addEventListener('change', function () {
+            lensValue.style.display = 'none';
             var value = event.target.value;
 
             var camera = viewer.scene.camera;
             camera.perspective.fov = value;
         });
 
-        lens.addEventListener('blur', function() {
+        lens.addEventListener('blur', function () {
             lensValue.style.display = 'none';
         });
-    
-        colorPicker.addEventListener('change', function(event) {
+
+        colorPicker.addEventListener('change', function (event) {
             var hexColor = event.target.value;
 
             hexColor = hexColor.replace(/^#/, '');
@@ -166,15 +177,15 @@ class OptionsInspector extends Controller {
             const b = parseInt(hexColor.substring(4, 6), 16) / 255;
 
             console.log('Selected color as normalized RGB array:', [r, g, b]);
-            viewer.scene.canvas.backgroundColor = [r, g, b]; 
+            viewer.scene.canvas.backgroundColor = [r, g, b];
         });
-    
-        showM2Checkbox.addEventListener('change', function() {
+
+        showM2Checkbox.addEventListener('change', function () {
             console.log('Show m2:', this.checked);
             viewer.scene._renderer.setCreateAnno(this.checked);
         });
-    
-        renderLinesCheckbox.addEventListener('change', function() {
+
+        renderLinesCheckbox.addEventListener('change', function () {
             console.log('Render 2D/3D Lines always:', this.checked);
             viewer.scene._renderer.setRenderAll(this.checked);
         });

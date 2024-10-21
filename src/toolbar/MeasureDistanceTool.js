@@ -157,17 +157,21 @@ export class MeasureDistanceTool extends Controller {
                 started = true;
                 this.setVisibleMeasureDetails(true);
                 this.createTextOverlay();
-
+    
                 if (!isToggle){
+                    this.bimViewer.fire("openInspector", {});
+    
                     document.getElementById('inspector_toggle').checked = true;
                     let measurementsTab = document.getElementsByClassName("xeokit-measurementsTab")[0];
                     let propTab = document.getElementsByClassName("xeokit-propertiesTab")[0];
-
+                    let optionsTab = document.getElementsByClassName("xeokit-optionsTab")[0];
+    
                     if (measurementsTab) {
-                        propTab.classList.remove('active');
+                        optionsTab.classList.remove('active');
                         measurementsTab.classList.add('active');
+                        propTab.classList.remove('active');
                     }
-
+    
                     isToggle = true;
                 }
             }
@@ -177,7 +181,6 @@ export class MeasureDistanceTool extends Controller {
             }
         }, 200);
     }
-
     setVisibleMeasureDetails(visible = true) {
         if (!this.measurementCanvasElement) {
             return;
@@ -245,6 +248,7 @@ export class MeasureDistanceTool extends Controller {
 
         if (sum != 0){
             spanTotal.textContent = "Total: " + sum.toFixed(2) + unit;
+            document.getElementById('nomeasuretext').innerHTML = '';
         }
     }
 
