@@ -30,7 +30,43 @@ class ThreeDMode extends Controller {
         });
 
         this._buttonElement.addEventListener("click", (event) => {
+
             if (this.getEnabled()) {
+                if (this.getActive()){
+                    this.bimViewer.openTab('storeys');
+
+                    // STOREYS STATE
+                    let storeysTree = this.bimViewer._storeysExplorer._treeView;
+                    let searchExplorer = this.bimViewer._searchExplorer;
+                
+                    const storeys = document.getElementsByClassName('xeokit-storeys xeokit-tree-panel')[0].getElementsByTagName('input');
+                    searchExplorer.processStateAndExpand(storeys, storeysTree, 0); //0 means just one expand, default is maximum 20
+
+                    let allShown = true;
+                    Array.from(storeys).forEach((storey, index) => {
+
+                        if (!storey.checked){
+                            allShown = false;
+                        }
+
+                    });
+                    
+                    if (allShown) {
+                        Array.from(storeys).forEach((storey, index) => {
+
+                            if (index > 1){
+                                if (!storey.checked){
+                                    return;
+                                }
+                                storeysTree._changeStructure(storey, false);
+                            }
+                            else{
+                                storeysTree._changeStructure(storey, true);
+                            }
+                        });
+                    }
+                }
+
                 this.bimViewer._sectionTool.hideControl();
                 this.setActive(!this.getActive(), () => { // Animated
                 });

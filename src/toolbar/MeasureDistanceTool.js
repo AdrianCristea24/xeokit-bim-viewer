@@ -247,8 +247,10 @@ export class MeasureDistanceTool extends Controller {
         }
 
         if (sum != 0){
-            spanTotal.textContent = "Total: " + sum.toFixed(2) + unit;
-            document.getElementById('nomeasuretext').innerHTML = '';
+            spanTotal.textContent = "Total Length: " + sum.toFixed(2) + unit;
+            if (document.getElementById('nomeasuretext')){
+                document.getElementById('nomeasuretext').innerHTML = '';
+            }
         }
     }
 

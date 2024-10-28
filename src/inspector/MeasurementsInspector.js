@@ -2,7 +2,7 @@ import {Controller} from "../Controller.js";
 
 /** @private */
 class MeasurementsInspector extends Controller {
-
+    
     constructor(parent, cfg = {}) {
 
         super(parent);
@@ -74,7 +74,6 @@ class MeasurementsInspector extends Controller {
         const html = [],
         localizedText = this.viewer.localeService.translate('measurementsInspector.noObjectSelectedWarning') || 'No measurements.';
         html.push(`<div class="element-attributes">`);
-        html.push(`<p class="xeokit-i18n subsubtitle no-object-selected-warning" data-xeokit-i18n="measurementsInspector.noObjectSelectedWarning">${localizedText}</p>`);
         html.push(`</div>`);
         const htmlStr = html.join("");
        this._propertiesElement.innerHTML = htmlStr;
@@ -103,13 +102,6 @@ class MeasurementsInspector extends Controller {
         this.viewer.scene.off(this._onModelUnloaded);
         document.removeEventListener('click', this._clickListener);
     }
-}
-
-function capitalizeFirstChar(str) {
-    if (!str) {
-        return str;
-    }
-   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export {MeasurementsInspector};

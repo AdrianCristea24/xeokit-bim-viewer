@@ -142,7 +142,7 @@ function createToolbarTemplate(cfg = {}) {
 }
 
 function createInspectorTemplate() {
-    const inspectorTemplate = `<div class="xeokit-tabs">  
+    const inspectorTemplate = `<div class="xeokit-tabscustom">  
     <div class="xeokit-tab xeokit-propertiesTab">
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#" data-xeokit-i18n="propertiesInspector.title">Properties</a>
         <div class="xeokit-tab-content">        
@@ -153,12 +153,13 @@ function createInspectorTemplate() {
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Measurements</a>
         <div class="xeokit-tab-content">        
         <div id="xeokit-measurements" class="xeokit-measurements"></div>
+        <div id="xeokit-measurements-area" class="xeokit-measurements"></div>
         </div>
     </div>
     <div class="xeokit-tab xeokit-optionsTab">
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Options</a>
         <div class="xeokit-tab-content">
-            <div id="xeokit-options" class="xeokit-options">Optiuni</div>
+            <div id="xeokit-options" class="xeokit-options">Options</div>
         </div>
     </div>
 </div>`;

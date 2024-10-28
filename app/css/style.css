@@ -192,6 +192,10 @@ body {
     visibility: hidden;
 }
 
+#textOverlayArea {
+	margin-bottom: 50px;
+}
+
 .clickable-span {
     display: block;
     padding: 7px;
@@ -53865,6 +53869,12 @@ span.flatpickr-weekday {
     .xeokit-tabscustom .xeokit-tab-content {
         float: left;
     }
+}
+
+.xeokit-tab-content {
+    display: block;
+    overflow-y: auto; /* Enable vertical scroll */
+	margin-bottom: 100px;
 }
 
 .xeokit-tabscustom .xeokit-btn-group {

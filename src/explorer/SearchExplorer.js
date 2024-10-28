@@ -6,30 +6,30 @@ const tempVec3 = math.vec3();
 
 /** @private */
 class SearchExplorer extends Controller {
-
+    
     constructor(parent, cfg = {}) {
         super(parent);
         this.highlighted = [];
         this.expended = [];
-
-
+    
+    
         if (!cfg.searchTabElement) {
             throw "Missing config: searchTabElement";
         }
-
+    
         if (!cfg.searchElement) {
             throw "Missing config: searchElement";
         }
-
+    
         this._searchTabElement = cfg.searchTabElement;
         this._searchTabButtonElement = document.getElementById('searchContent');
-
+    
         if (!this._searchTabButtonElement) {
             throw "Missing DOM element: .xeokit-tab-content";
         }
-
+    
         cfg.searchElement;
-
+    
         document.addEventListener('run', this._clickListener = (e) => {
             if (!e.target.matches('.xeokit-accordion .xeokit-accordion-button')) {
                 return;
@@ -41,13 +41,13 @@ class SearchExplorer extends Controller {
                 }
             }
         });
-
+    
         this.clear();
         this._setPropertySets();
     }
-
+    
     chnageClassesState(word, visible = true) {
-
+    
         const parts = word.split('-');
         const identifier = parts.pop();
         //console.log(identifier);
@@ -56,7 +56,7 @@ class SearchExplorer extends Controller {
             let metadata = this.getObjectPropertySets(key);
             let entity = null;
             let entityId = null;
-
+    
             if (key === identifier) { //ID
                 entityId = identifier;
                 entity = this.viewer.scene.objects[entityId];
@@ -65,18 +65,18 @@ class SearchExplorer extends Controller {
             } else if (metadata.type && metadata.type.toLowerCase() === identifier.toLowerCase()) { // Class
                 entityId = metadata.id;
             }
-
+    
             entity = this.viewer.scene.objects[entityId];
-
+    
             if (entity){
                 console.log('found it');
                 entity.visible = visible;
             }
         }
-
+    
     }
     
-
+    
     searchObject(word) {
         let historyIndex = this.highlighted.length;
         let freqMap = {};
@@ -87,7 +87,7 @@ class SearchExplorer extends Controller {
             console.log(metadata.propertySets[0]);
             let entity = null;
             let entityId = null;
-
+    
             if (key === word) { //ID
                 entityId = key;
             } else if (metadata.name && metadata.name === word) { //Name
@@ -136,7 +136,7 @@ class SearchExplorer extends Controller {
         this.drawElements(historyIndex);
         return found;
     }
-
+    
     getObjectPropertySets(objectId) {
         const metaObject = this.viewer.metaScene.metaObjects[objectId];
         if (!metaObject) {
@@ -144,7 +144,7 @@ class SearchExplorer extends Controller {
         }
         return metaObject;
     }
-
+    
     getProjectName(){
         let projectId = new URLSearchParams(window.location.search).get('projectId') ?? 0;
     
@@ -158,15 +158,17 @@ class SearchExplorer extends Controller {
         console.log(projectId); 
         return projectId;
     }
-
+    
     loadButtonsView(){
         const localFavs = document.getElementById('localFavsViews');
-        const projectId = new URLSearchParams(window.location.search).get('projectId');
         localFavs.innerHTML = '';
-
+    
+        let projectId = this.getProjectName();
+        const bimViewer = this.bimViewer;
+    
         if (projectId) {
             const savedProjects = JSON.parse(localStorage.getItem('views-' + projectId)) || [];
-
+    
             savedProjects.forEach((save, index) => {
                 // Create a container div for each project
                 const projectContainer = document.createElement('div');
@@ -190,9 +192,9 @@ class SearchExplorer extends Controller {
             
                 // Add click event to the button
                 button.addEventListener('click', function() {
-                    bimViewer._searchExplorer.setCurrentView(save)
+                    bimViewer._searchExplorer.setCurrentView(save);
                 });
-
+    
                 button.addEventListener('contextmenu', function(event) {
                     event.preventDefault();
                 
@@ -246,12 +248,12 @@ class SearchExplorer extends Controller {
                 // Append the project container to the localFavs (assuming it's a div or similar container)
                 localFavs.appendChild(projectContainer);
             });
-
+    
         }
-
-
+    
+    
     }
-
+    
     _setPropertySets() {
         const html = [];
         html.push(`<div class="element-attributes">`);
@@ -265,12 +267,12 @@ class SearchExplorer extends Controller {
                 <span id="viewsLabel" style="color: white">Views</span>
             </div>
             <br>
-
+    
             <div id="searchView" style="display: none">
-
+    
                 
                 <div id="localFavs" style="display: none;"></div>
-
+    
                 <div id="colorPickerContainer">
                     <label for="colorPickerHighlight">Highlight Color </label>
                     <input type="color" id="colorPickerHighlight" name="colorPicker" value="#7CD644">
@@ -278,7 +280,7 @@ class SearchExplorer extends Controller {
                 <br>
                 <div style="display: flex; align-items: center;">
                     <label for="searchInput" style="margin-right: 10px;">Search</label>
-                    <input type="text" style="width: 225px; margin-right: 10px;" id="searchInput" placeholder="by Id,Name,Class,Type,Reference">
+                    <input type="text" style="width: 225px; margin-right: 10px; color: white" id="searchInput" placeholder="by Id,Name,Class,Type,Reference">
                     
                     <div class="icon-container">
                         <svg id="savedSelections" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24px" height="24px" style="display: block; cursor: pointer;">
@@ -286,14 +288,14 @@ class SearchExplorer extends Controller {
                         </svg>
                         <div class="tooltip">View Favorites</div>
                     </div>
-
+    
                     <svg id="favoriteButton" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="yellow" width="24px" height="24px" style="display: none; cursor: pointer;">
                         <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
                     </svg>
                 </div>
                 <br>
-
-
+    
+    
                 <!-- Modal for save name input -->
                 <div id="saveModal" style="display:none;">
                     <div class="modal-content">
@@ -306,18 +308,18 @@ class SearchExplorer extends Controller {
                         </div>
                     </div>
                 </div>
-
+    
                 <div id="search-elements"></div>
-
+    
             </div>
-
+    
             <div id="viewsView">
                 <button class="ViewButtons" id="saveView"> Save View </button>
                
                 <div id="localFavsViews">
                 
                 </div>
-
+    
                 <!-- Modal for save name input -->
                 <div id="saveModalView" style="display:none;">
                     <div class="modal-content">
@@ -329,16 +331,16 @@ class SearchExplorer extends Controller {
                             <button id="cancelButtonView" class="button cancel">Cancel</button>
                         </div>
                     </div>
-
+    
                 </div>
-
+    
             </div>
         `);
-
+    
         html.push(`</div>`);
         this._searchTabButtonElement.innerHTML = html.join("");
-
-
+    
+    
         const favoriteButton = document.getElementById('favoriteButton');
         const saveModal = document.getElementById('saveModal');
         const confirmSaveButton = document.getElementById('confirmSaveButton');
@@ -348,24 +350,24 @@ class SearchExplorer extends Controller {
         const cancelButtonView = document.getElementById('cancelButtonView');
         const saveHighlightInput = document.getElementById('saveHighlightInput');
         const saveViewInput = document.getElementById('saveViewInput');
-
+    
         const searchItems = document.getElementById('search-elements');
-
+    
         const toggleDiv = document.getElementById('toggleDiv');
         const searchView = document.getElementById('searchView');
         const viewsView = document.getElementById('viewsView');
-
+    
         const saveView = document.getElementById('saveView');
-
+    
         const highlightLabel = document.getElementById('highlightLabel');
         const viewsLabel = document.getElementById('viewsLabel');
-
+    
         const localFavs = document.getElementById('localFavs');
-        const localFavsViews = document.getElementById('localFavsViews');
-
-
-        const projectId = new URLSearchParams(window.location.search).get('projectId');
-
+        document.getElementById('localFavsViews');
+    
+    
+        const projectId = this.getProjectName();
+    
         document.getElementById('savedSelections').addEventListener('click', function() {
             const localFavsContainer = document.getElementById('localFavs');
             
@@ -376,24 +378,24 @@ class SearchExplorer extends Controller {
                 localFavsContainer.style.display = 'none';
             }
         });
-
+    
         if (projectId) {
             const saves = JSON.parse(localStorage.getItem(projectId)) || [];
             localFavs.innerHTML = ''; // Clear previous content
-
+    
             localFavs.addEventListener('click', function() {
                 localFavs.style.display = 'none';
             });
-
+    
             this.loadButtonsHighlight(localFavs, saves);
             
         } else {
             console.error('No project ID found in the URL.');
         }
-
+    
         saveView.addEventListener('click', function() {
             saveModalView.style.display = 'block';
-
+    
         });
         
         toggleDiv.addEventListener('change', function(event) {
@@ -402,27 +404,27 @@ class SearchExplorer extends Controller {
             if (isEnabled) {
                 highlightLabel.style.color = 'gray';
                 viewsLabel.style.color = 'white';
-
+    
                 viewsView.style.display = 'block';
                 searchView.style.display = 'none';
             } else {
                 highlightLabel.style.color = 'white';
                 viewsLabel.style.color = 'gray';
-
+    
                 viewsView.style.display = 'none';
                 searchView.style.display = 'block';
             }
         }.bind(this));  
-
-
+    
+    
         favoriteButton.addEventListener('click', function() {
             saveModal.style.display = 'block';
         }.bind(this));  
-
+    
         confirmSaveButton.addEventListener('click', function() {
             const saveName = saveHighlightInput.value;
             const items = searchItems.innerHTML;
-            const projectId = new URLSearchParams(window.location.search).get('projectId');
+            const projectId = this.getProjectName();
     
             if (!saveName) {
                 alert('Please enter a name for the save.');
@@ -434,25 +436,25 @@ class SearchExplorer extends Controller {
                 return;
             }
     
-
+    
             // Screenshot process
-            const viewer = bimViewer.viewer;  // Assuming the viewer is accessible via bimViewer.viewer
+            const viewer =this.bimViewer.viewer;  // Assuming the viewer is accessible via this.bimViewer.viewer
             const canvasElement = viewer.scene.canvas.canvas;  // Access the canvas element
-
+    
             // Get the aspect ratio of the canvas
             const aspect = canvasElement.height / canvasElement.width;
-
+    
             // Set desired width and height for the screenshot
             const width = 200;  // Set your desired width
             const height = Math.floor(width * aspect);  // Calculate the corresponding height to maintain aspect ratio
-
+    
             // Capture screenshot using viewer.getSnapshot()
             const imageData = viewer.getSnapshot({
                 format: "png",
                 width: width,
                 height: height
             });
-
+    
             const newSave = {
                 name: saveName,
                 content: items,
@@ -460,22 +462,22 @@ class SearchExplorer extends Controller {
             };
             
             let savedProjects = JSON.parse(localStorage.getItem(projectId)) || [];
-
+    
             savedProjects.push(newSave);
             localStorage.setItem(projectId, JSON.stringify(savedProjects));
             savedProjects = JSON.parse(localStorage.getItem(projectId)) || [];
             
-            bimViewer._searchExplorer.loadButtonsHighlight(localFavs, savedProjects);
-
+            this.bimViewer._searchExplorer.loadButtonsHighlight(localFavs, savedProjects);
+    
             saveModal.style.display = 'none'; 
             saveHighlightInput.value = '';
         }.bind(this));  
-
+    
         confirmSaveButtonView.addEventListener('click', function() {
             
-            const projectId = new URLSearchParams(window.location.search).get('projectId');
+            const projectId = this.getProjectName();
             let saveName = saveViewInput.value;
-
+    
             if (!saveName) {
                 alert('Please enter a name for the save.');
                 return;
@@ -485,66 +487,66 @@ class SearchExplorer extends Controller {
                 alert('No project ID found in the URL.');
                 return;
             }
-
-            let fullState = bimViewer._searchExplorer.getCurrentView();
+            console.log(this.bimViewer);
+            let fullState = this.bimViewer._searchExplorer.getCurrentView();
             fullState.name = saveName;
-
+    
             // Screenshot process
-            const viewer = bimViewer.viewer;  // Assuming the viewer is accessible via bimViewer.viewer
+            const viewer = this.bimViewer.viewer;  // Assuming the viewer is accessible via this.bimViewer.viewer
             const canvasElement = viewer.scene.canvas.canvas;  // Access the canvas element
-
+    
             // Get the aspect ratio of the canvas
             const aspect = canvasElement.height / canvasElement.width;
-
+    
             // Set desired width and height for the screenshot
             const width = 200;  // Set your desired width
             const height = Math.floor(width * aspect);  // Calculate the corresponding height to maintain aspect ratio
-
+    
             // Capture screenshot using viewer.getSnapshot()
             const imageData = viewer.getSnapshot({
                 format: "png",
                 width: width,
                 height: height
             });
-
+    
             // Add the screenshot to the fullState object as a base64 string
             fullState.screenshot = imageData;  // This will be a Base64 PNG image
-
+    
             // Log the fullState object
             console.log(fullState);
-
+    
     
             let savedViews = JSON.parse(localStorage.getItem('views-' + projectId)) || [];
     
             savedViews.push(fullState);
             localStorage.setItem('views-' + projectId, JSON.stringify(savedViews));
             
-            bimViewer._searchExplorer.loadButtonsView();
-
+            this.bimViewer._searchExplorer.loadButtonsView();
+    
             saveModalView.style.display = 'none';
             saveViewInput.value = '';
         }.bind(this));
-
+    
         cancelButton.addEventListener('click', function() {
             saveModal.style.display = 'none';
             saveHighlightInput.value = '';
         }.bind(this));
-
+    
         cancelButtonView.addEventListener('click', function() {
             saveModalView.style.display = 'none';
             saveViewInput.value = '';  
         }.bind(this));
-
+    
         const searchInput = document.getElementById('searchInput');
         const colorSelect = document.getElementById('colorPickerHighlight');
         this.updateSelectColor();
         this.loadButtonsView();
-
+    
     
         if (searchInput) {
             searchInput.addEventListener('input', function() {
                 const searchTerm = searchInput.value;
-
+    
                 if (typeof this.searchObject === 'function') {
                     if (this.searchObject(searchTerm)){
                         searchInput.value = '';
@@ -554,7 +556,7 @@ class SearchExplorer extends Controller {
         
                         // Remove the class after the animation ends (1s)
                         document.getElementById('favoriteButton').style.display = 'block';
-
+    
                         setTimeout(function() {
                             searchInput.classList.remove('green-flash');
                         }, 2000);
@@ -563,7 +565,7 @@ class SearchExplorer extends Controller {
                     console.warn('searchObject function is not defined.');
                 }
             }.bind(this));
-
+    
             colorSelect.addEventListener('change', function() {
                 this.updateSelectColor();
                 console.log('Selected color:', colorSelect.value);
@@ -571,9 +573,9 @@ class SearchExplorer extends Controller {
         } else {
             console.error('Search input element not found.');
         }
-
+    
     }
-
+    
     getCurrentView() {
         // CAMERA STATE
         const camera = this.bimViewer.viewer.scene.camera;
@@ -740,7 +742,7 @@ class SearchExplorer extends Controller {
         }
     
     }
-
+    
     loadButtonsHighlight(localFavs,saves) {
         const projectId = this.getProjectName();
         localFavs.innerHTML = '';
@@ -996,8 +998,9 @@ class SearchExplorer extends Controller {
             localFavs.appendChild(projectContainer);
         });
     }
+    
+    expandParents(element, treeView, step) {
 
-    expandParents(element, treeView) {
         const switchId = `switch-${element.id}`;
         const switchElement = document.getElementById(switchId);
     
@@ -1005,29 +1008,31 @@ class SearchExplorer extends Controller {
             treeView._expandSwitchElement(switchElement);
             this.expended.push(switchElement);
         }
-    
-        const ulElements = element.querySelectorAll('ul');
-        ulElements.forEach(ul => {
-            ul.querySelectorAll('li').forEach(childLi => {
-                this.expandParents(childLi, treeView); // Recursively expand child elements
+        
+        if (step){ // dont go further in the three if step is 1
+            const ulElements = element.querySelectorAll('ul');
+            ulElements.forEach(ul => {
+                ul.querySelectorAll('li').forEach(childLi => {
+                    this.expandParents(childLi, treeView, --step); // Recursively expand child elements
+                });
             });
-        });
+        }
     };
-
+    
     collapseParents(elements, treeView){
         Array.from(elements).forEach(switchElement => {
             treeView._collapseSwitchElement(switchElement);
         });
     }
-
-    processStateAndExpand(state, treeView) {
+    
+    processStateAndExpand(state, treeView, step = 20) {
         const firstElem = document.getElementById(state[0].id);
         const firstLiElement = firstElem?.closest('li');
         if (firstLiElement) {
-            this.expandParents(firstLiElement, treeView);
+            this.expandParents(firstLiElement, treeView, step);
         }
     };
-
+    
     updateSelectColor() {
         const colorSelect = document.getElementById('colorPickerHighlight');
         colorSelect.style.backgroundColor = colorSelect.value;
@@ -1039,7 +1044,7 @@ class SearchExplorer extends Controller {
         ];
         console.log(this.colorize);
     }
-
+    
     drawElements(historyIndex = 0) {
         let htmlContainer = document.getElementById('container-container');
         const viewer = this.viewer;
@@ -1065,6 +1070,7 @@ class SearchExplorer extends Controller {
                     container.style.marginLeft = '21px';
     
                     container.innerHTML = `
+    
                         <input type="checkbox" class="checkbox-${entity.id}" id="${this.colorize}" name="single" checked>
                         <label for="checkbox-${entity.id}">
                             <span class="element">${entity.id}</span>
@@ -1073,7 +1079,7 @@ class SearchExplorer extends Controller {
                             <i class="fas fa-trash"></i>
                         </a>
                     `;
-
+    
                     htmlContainer.appendChild(container);
     
                     const trashAnchor = document.getElementById(`trash-${entity.id}`);
@@ -1086,7 +1092,7 @@ class SearchExplorer extends Controller {
                             document.getElementById('favoriteButton').style.display = 'none';
                         }
                     });
-
+    
                 }
             } else {
                 let parentContainerId = `container-${entity.parent}`;
@@ -1174,7 +1180,7 @@ class SearchExplorer extends Controller {
     }
     
     
-
+    
     clear() {
         for(let i=0;i<this.highlighted.length; i++){
             let entityTmp = this.viewer.scene.objects[this.highlighted[i].id];
@@ -1182,7 +1188,7 @@ class SearchExplorer extends Controller {
             this.highlighted.splice(i, 1);
         }
     }
-
+    
     getFromArray(parent){
         var arr = [];
         for(let i=0;i<this.highlighted.length; i++){
@@ -1192,11 +1198,11 @@ class SearchExplorer extends Controller {
         }
         return arr;
     }
-
+    
     setEnabledEntity(enabled, id) {
         let entityTmp = this.viewer.scene.objects[id];
         let checkboxes = document.getElementsByClassName(`checkbox-${entityTmp.id}`);
-
+    
         for (let i = 0; i < checkboxes.length; i++) {
             if (!enabled) {
                 entityTmp.colorize = undefined;
@@ -1207,13 +1213,13 @@ class SearchExplorer extends Controller {
             }
         }
     }
-
+    
     setEnabledParent(enabled, parent) {
         let props = this.getFromArray(parent);
         for (let i = 0; i < props.length; i++) {
             let entityTmp = this.viewer.scene.objects[props[i].id];
             let checkboxes = document.getElementsByClassName(`checkbox-${entityTmp.id}`);
-
+    
             for (let i = 0; i < checkboxes.length; i++) {
                 if (!enabled) {
                     entityTmp.colorize = undefined;
@@ -1225,7 +1231,7 @@ class SearchExplorer extends Controller {
             }
         }
     }
-
+    
     _setupCheckboxListeners() {
         let freqMap = {};
     
@@ -1245,7 +1251,7 @@ class SearchExplorer extends Controller {
                     }.bind(this));
                 }
             });
-
+    
             if (entity.id != entity.parent && !freqMap[entity.parent]) {
                 Array.from(checkboxesParent).forEach(checkboxParent => {
                     if (checkboxParent) {
@@ -1261,10 +1267,10 @@ class SearchExplorer extends Controller {
                 freqMap[entity.parent] = 1;
             }
         }
-
+    
     }
-
-
+    
+    
     destroy() {
         super.destroy();
         this._treeView.destroy();

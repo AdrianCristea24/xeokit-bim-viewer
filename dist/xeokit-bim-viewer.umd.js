@@ -157614,6 +157614,18 @@
 
           const containerElement = cfg.containerElement || document.getElementById(cfg.containerElementId);
 
+          const annotations = new AnnotationsPlugin(this.viewer, {
+              markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
+      
+              values: {
+                  markerBGColor: "black",
+                  labelBGColor: "white",
+                  glyph: "X",
+                  title: "Untitled",
+                  description: "No description"
+              }
+          });
+
           if (!(containerElement instanceof HTMLElement)) {
               this.error("Mandatory config expected: valid containerElementId or containerElement");
               return;
@@ -157646,6 +157658,21 @@
           this._pruneEmptyNodes = cfg.pruneEmptyNodes;
           this._showListItemElementId = null;
           this._renderService = cfg.renderService || new RenderService();
+          this.ctrlPressed = false;
+          this.annotations = annotations;
+          this.anno = [];
+
+          document.body.addEventListener('keydown', (event) => {
+              if (event.key === 'Control') {
+                  this.ctrlPressed = true;  // Assuming you're within a class; otherwise, handle 'this'
+              }
+          });
+
+          document.body.addEventListener('keyup', (event) => {
+              if (event.key === 'Control') {
+                  this.ctrlPressed = false;
+              }
+          });
 
           if (!this._renderService) {
               throw new Error('TreeViewPlugin: no render service set');
@@ -157777,10 +157804,23 @@
               }
 
           };
-          
+
 
           this._checkboxChangeHandler = (event) => {
               console.log('checboxed');
+
+              if (event.target){//checked
+                  for (let i = this.anno.length - 1; i >= 0; i--) {
+                      let annotation = this.anno[i];
+                      this.annotations.destroyAnnotation([annotation]);
+                      this.anno.splice(i, 1);  // Remove the current annotation from the array
+                  }
+
+                  if (!this.ctrlPressed){
+                      this.checkIfStoreys(event.target);
+                  }
+              }
+
               if (this._muteTreeEvents) {
                   return;
               }
@@ -157807,6 +157847,80 @@
           }
 
           this.hierarchy = cfg.hierarchy;
+      }
+
+      //adrian ifcspace
+      showIfcSpaceInfo(parent) {
+          document.getElementsByClassName('xeokit-classes xeokit-tree-panel')[0].getElementsByTagName('input');
+          const switchId = parent.id.replace('checkbox-', 'switch-');
+          const id = parent.id.replace('checkbox-', '');
+          const switchElement = document.getElementById(switchId);
+          const element = document.getElementById(id);
+
+          this._expandSwitchElement(switchElement);
+
+          const ulElements = element.querySelectorAll('ul');
+          ulElements.forEach(ul => {
+              ul.querySelectorAll('li').forEach(childLi => {
+                  if (childLi.id.includes('IfcSpace')){
+                      let ifcspaceSwitch = document.getElementById('switch-'+childLi.id);
+                      this._expandSwitchElement(ifcspaceSwitch);
+
+                      const liElementsIfc = childLi.querySelectorAll('li');
+
+                      liElementsIfc.forEach(li => {
+                          let objectId = li.id.split('-').pop();
+                          let entity = this.viewer.scene.objects[objectId];
+                          let aabb = entity.aabb;
+                          let entityCenter = math.getAABB3Center(aabb);
+                          let entityId = entity.id;
+
+                          this.annotations.createAnnotation({
+                              id: entity.id,
+                              entity: entity,
+                              worldPos: entityCenter,
+                              occludable: false,
+                              markerShown: true,
+                              labelShown: false,
+                  
+                              values: {
+                                  glyph: li.outerText,
+                              }
+                          });
+
+                          this.anno.push(entityId);
+                      });
+                      this._collapseSwitchElement(ifcspaceSwitch);
+                  }
+              });
+          });
+          this._collapseSwitchElement(switchElement);
+      }
+
+      checkIfStoreys(target) {
+          const storeys = document.getElementsByClassName('xeokit-storeys xeokit-tree-panel')[0].getElementsByTagName('input');
+          const targetInitialState = target.checked;
+          Array.from(storeys).forEach((storey) => {
+              if (storey.id == target.id) {
+                  Array.from(storeys).forEach((storeyDuplicate, index) => {
+                      if (storeyDuplicate.id == target.id) {
+                          this._changeStructure(storeyDuplicate, targetInitialState);
+
+                          if (targetInitialState){
+                              console.log('showIFC');
+                              this.showIfcSpaceInfo(storeyDuplicate);
+                          }
+
+                      }
+                      else if (targetInitialState == true){
+                          this._changeStructure(storeyDuplicate, false);
+                      }
+                      
+                  });
+                  return true;
+              }
+          });
+          return false;
       }
 
       /**
@@ -165381,6 +165495,26 @@
           }
 
           const buttonElement = cfg.buttonElement;
+          this.measurementCanvasElementArea =  document.getElementById("xeokit-measurements-area");
+
+          // Create a div element for the text panel
+          var measureObj = document.getElementById("textOverlayArea") ?? null;
+          if (!measureObj){
+              this._textOverlayElement = document.createElement('span');
+              this._textOverlayElement.id = 'textOverlayArea';
+              this._textOverlayElement.className = 'xeokit-btn-group-measure';
+
+              const container = this.measurementCanvasElementArea;
+
+              if (container) {
+                  container.appendChild(this._textOverlayElement);
+              } else {
+                  console.error("Canvas container is not defined.");
+              }
+          }
+
+          measureObj = document.getElementById("textOverlayArea");
+          measureObj.innerHTML = '';
 
           const annotations = new AnnotationsPlugin(this.viewer, {
               markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
@@ -165426,41 +165560,137 @@
           this.viewer.cameraControl.on("pickedNothing", (e) => {
               for(let i = 0; i < this.selected.length; i++) {
                   annotations.destroyAnnotation([this.selected[i]]);
+                  this.viewer.scene.objects[this.selected[i]].colorize = undefined;
                   this.viewer.scene.objects[this.selected[i]].selected = false;
               }
               this.selected = [];
+
+              let spanTotal = document.getElementById("spanTotalArea");
+              let measureObj = document.getElementById("textOverlayArea");
+
+              if (spanTotal){
+                  spanTotal.textContent = '';
+              }
+
+              if (measureObj) {
+                  measureObj.innerHTML = '';
+              }
           });
 
           this.on("active", (active) => {
               const viewer = this.viewer;
               if (active) {
                   buttonElement.classList.add("active");
+                  let measureObj = document.getElementById("textOverlayArea");
+
                   this._onPick = this.viewer.cameraControl.on("picked", (pickResult) => {
                       if (!pickResult.entity) {
                           return;
                       }
                       pickResult.entity.selected = !pickResult.entity.selected;
-                      if (!pickResult.entity.selected){
 
+                      let spanTotal = document.createElement('span');
+                      measureObj.innerHTML = "";
+                      spanTotal.textContent = '';
+                      spanTotal.className = 'spanTotal';
+                      spanTotal.id = 'spanTotalArea';
+                      measureObj.appendChild(spanTotal);
+
+                      if (!pickResult.entity.selected){
                           let index = this.selected.indexOf(pickResult.entity.id);
                           if (index !== -1) { 
                               annotations.destroyAnnotation([this.selected[index]]);
                               viewer.scene.objects[this.selected[index]].selected = false;
+                              viewer.scene.objects[this.selected[index]].colorize = undefined;
                               this.selected.splice(index, 1);
                           }
 
-                          return;
-                      }
+                          this.totalArea = 0;
+                          this.selected.forEach(element => {
+                              let tmp = this.viewer.scene.objects[element];
+                              tmp.colorize = undefined;
+                              let distance = parseFloat(tmp.surfaceArea.toFixed(2));
+                              this.totalArea += distance;
 
+                              let span = document.createElement('span');
+                              let br = document.createElement('br');
+                              let copytext = distance + ' m²';
+
+                              span.addEventListener('click', function() {
+                                  navigator.clipboard.writeText(copytext).then(() => {
+                                      console.log('Text copied to clipboard:', copytext);
+                                  }).catch(err => {
+                                      console.error('Failed to copy text:', err);
+                                  });
+                              });
+                              
+                              span.className = 'clickable-span';
+                              span.textContent = "•  " +  distance + ' m²';
+                  
+                              measureObj.appendChild(span);
+                              measureObj.appendChild(br);
+                          });
+
+                          if (spanTotal){
+                              if (this.totalArea == 0){
+                                  spanTotal.textContent = "";
+                                  return;
+                              }
+                              spanTotal.textContent = "Total Area: " + this.totalArea.toFixed(2) + " m²";
+                          }
+                          return;
+
+                      }
+                     
                       if (!this.ctrlPressed){
                           for(let i = 0; i < this.selected.length; i++) {
                               annotations.destroyAnnotation([this.selected[i]]);
                               viewer.scene.objects[this.selected[i]].selected = false;
+                              viewer.scene.objects[this.selected[i]].colorize = undefined;
                           }
                           this.selected = [];
                       }
-
                       this.selected.push(pickResult.entity.id);
+
+
+                      this.totalArea = 0;
+                      this.selected.forEach(element => {
+                          let tmp = this.viewer.scene.objects[element];
+                          tmp.colorize = undefined;
+                          let distance = parseFloat(tmp.surfaceArea.toFixed(2));
+                          this.totalArea += distance;
+
+                          let span = document.createElement('span');
+                          let br = document.createElement('br');
+                          let copytext = distance + ' m²';
+
+                          span.addEventListener('click', function() {
+                              navigator.clipboard.writeText(copytext).then(() => {
+                                  console.log('Text copied to clipboard:', copytext);
+                              }).catch(err => {
+                                  console.error('Failed to copy text:', err);
+                              });
+                          });
+                          
+                          span.className = 'clickable-span';
+                          span.textContent = "•  " +  distance + ' m²';
+              
+                          measureObj.appendChild(span);
+                          measureObj.appendChild(br);
+                      });
+
+                      if (spanTotal) {
+                          spanTotal.textContent = "Total Area: " + this.totalArea.toFixed(2) + " m²";
+                      }
+
+                      if (this.selected.length > 1){
+                          pickResult.entity.colorize = [1, 1, 0]; // RGB for highlight
+                          //     pickResult.entity.scene.components['default.selectedMaterial']._state.fillColor = [1, 0, 0];
+                          //     console.log(pickResult.entity.id);
+                          //     console.log(pickResult.entity);
+                          //     console.log(this.viewer.scene.objects["08f4t_E$rBBQFcvLzljACh"]);
+                          //     this.viewer.scene.objects["08f4t_E$rBBQFcvLzljACh"].scene.components['default.selectedMaterial']._state.fillColor = [0, 0, 1];
+                      }
 
                       document.getElementById('inspector_toggle').checked = true;
 
@@ -167687,30 +167917,30 @@
 
   /** @private */
   class SearchExplorer extends Controller {
-
+      
       constructor(parent, cfg = {}) {
           super(parent);
           this.highlighted = [];
           this.expended = [];
-
-
+      
+      
           if (!cfg.searchTabElement) {
               throw "Missing config: searchTabElement";
           }
-
+      
           if (!cfg.searchElement) {
               throw "Missing config: searchElement";
           }
-
+      
           this._searchTabElement = cfg.searchTabElement;
           this._searchTabButtonElement = document.getElementById('searchContent');
-
+      
           if (!this._searchTabButtonElement) {
               throw "Missing DOM element: .xeokit-tab-content";
           }
-
+      
           cfg.searchElement;
-
+      
           document.addEventListener('run', this._clickListener = (e) => {
               if (!e.target.matches('.xeokit-accordion .xeokit-accordion-button')) {
                   return;
@@ -167722,13 +167952,13 @@
                   }
               }
           });
-
+      
           this.clear();
           this._setPropertySets();
       }
-
+      
       chnageClassesState(word, visible = true) {
-
+      
           const parts = word.split('-');
           const identifier = parts.pop();
           //console.log(identifier);
@@ -167737,7 +167967,7 @@
               let metadata = this.getObjectPropertySets(key);
               let entity = null;
               let entityId = null;
-
+      
               if (key === identifier) { //ID
                   entityId = identifier;
                   entity = this.viewer.scene.objects[entityId];
@@ -167746,18 +167976,18 @@
               } else if (metadata.type && metadata.type.toLowerCase() === identifier.toLowerCase()) { // Class
                   entityId = metadata.id;
               }
-
+      
               entity = this.viewer.scene.objects[entityId];
-
+      
               if (entity){
                   console.log('found it');
                   entity.visible = visible;
               }
           }
-
+      
       }
       
-
+      
       searchObject(word) {
           let historyIndex = this.highlighted.length;
           let freqMap = {};
@@ -167768,7 +167998,7 @@
               console.log(metadata.propertySets[0]);
               let entity = null;
               let entityId = null;
-
+      
               if (key === word) { //ID
                   entityId = key;
               } else if (metadata.name && metadata.name === word) { //Name
@@ -167817,7 +168047,7 @@
           this.drawElements(historyIndex);
           return found;
       }
-
+      
       getObjectPropertySets(objectId) {
           const metaObject = this.viewer.metaScene.metaObjects[objectId];
           if (!metaObject) {
@@ -167825,29 +168055,31 @@
           }
           return metaObject;
       }
-
+      
       getProjectName(){
-        let projectId = new URLSearchParams(window.location.search).get('projectId') ?? 0;
-    
-        if (!projectId){
-            const regex = /\/projects\/([^\/]+)/;
-            const match = window.location.href.match(regex);
-        
-            projectId = match && match[1] ? match[1] : 'adrian';
-        }
-    
-        console.log(projectId); 
-        return projectId;
+          let projectId = new URLSearchParams(window.location.search).get('projectId') ?? 0;
+      
+          if (!projectId){
+              const regex = /\/projects\/([^\/]+)/;
+              const match = window.location.href.match(regex);
+          
+              projectId = match && match[1] ? match[1] : 'adrian';
+          }
+      
+          console.log(projectId); 
+          return projectId;
       }
-
+      
       loadButtonsView(){
           const localFavs = document.getElementById('localFavsViews');
-          const projectId = new URLSearchParams(window.location.search).get('projectId');
           localFavs.innerHTML = '';
-
+      
+          let projectId = this.getProjectName();
+          const bimViewer = this.bimViewer;
+      
           if (projectId) {
               const savedProjects = JSON.parse(localStorage.getItem('views-' + projectId)) || [];
-
+      
               savedProjects.forEach((save, index) => {
                   // Create a container div for each project
                   const projectContainer = document.createElement('div');
@@ -167873,7 +168105,7 @@
                   button.addEventListener('click', function() {
                       bimViewer._searchExplorer.setCurrentView(save);
                   });
-
+      
                   button.addEventListener('contextmenu', function(event) {
                       event.preventDefault();
                   
@@ -167927,12 +168159,12 @@
                   // Append the project container to the localFavs (assuming it's a div or similar container)
                   localFavs.appendChild(projectContainer);
               });
-
+      
           }
-
-
+      
+      
       }
-
+      
       _setPropertySets() {
           const html = [];
           html.push(`<div class="element-attributes">`);
@@ -167946,12 +168178,12 @@
                 <span id="viewsLabel" style="color: white">Views</span>
             </div>
             <br>
-
+    
             <div id="searchView" style="display: none">
-
+    
                 
                 <div id="localFavs" style="display: none;"></div>
-
+    
                 <div id="colorPickerContainer">
                     <label for="colorPickerHighlight">Highlight Color </label>
                     <input type="color" id="colorPickerHighlight" name="colorPicker" value="#7CD644">
@@ -167959,7 +168191,7 @@
                 <br>
                 <div style="display: flex; align-items: center;">
                     <label for="searchInput" style="margin-right: 10px;">Search</label>
-                    <input type="text" style="width: 225px; margin-right: 10px;" id="searchInput" placeholder="by Id,Name,Class,Type,Reference">
+                    <input type="text" style="width: 225px; margin-right: 10px; color: white" id="searchInput" placeholder="by Id,Name,Class,Type,Reference">
                     
                     <div class="icon-container">
                         <svg id="savedSelections" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24px" height="24px" style="display: block; cursor: pointer;">
@@ -167967,14 +168199,14 @@
                         </svg>
                         <div class="tooltip">View Favorites</div>
                     </div>
-
+    
                     <svg id="favoriteButton" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="yellow" width="24px" height="24px" style="display: none; cursor: pointer;">
                         <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
                     </svg>
                 </div>
                 <br>
-
-
+    
+    
                 <!-- Modal for save name input -->
                 <div id="saveModal" style="display:none;">
                     <div class="modal-content">
@@ -167987,18 +168219,18 @@
                         </div>
                     </div>
                 </div>
-
+    
                 <div id="search-elements"></div>
-
+    
             </div>
-
+    
             <div id="viewsView">
                 <button class="ViewButtons" id="saveView"> Save View </button>
                
                 <div id="localFavsViews">
                 
                 </div>
-
+    
                 <!-- Modal for save name input -->
                 <div id="saveModalView" style="display:none;">
                     <div class="modal-content">
@@ -168010,16 +168242,16 @@
                             <button id="cancelButtonView" class="button cancel">Cancel</button>
                         </div>
                     </div>
-
+    
                 </div>
-
+    
             </div>
         `);
-
+      
           html.push(`</div>`);
           this._searchTabButtonElement.innerHTML = html.join("");
-
-
+      
+      
           const favoriteButton = document.getElementById('favoriteButton');
           const saveModal = document.getElementById('saveModal');
           const confirmSaveButton = document.getElementById('confirmSaveButton');
@@ -168029,24 +168261,24 @@
           const cancelButtonView = document.getElementById('cancelButtonView');
           const saveHighlightInput = document.getElementById('saveHighlightInput');
           const saveViewInput = document.getElementById('saveViewInput');
-
+      
           const searchItems = document.getElementById('search-elements');
-
+      
           const toggleDiv = document.getElementById('toggleDiv');
           const searchView = document.getElementById('searchView');
           const viewsView = document.getElementById('viewsView');
-
+      
           const saveView = document.getElementById('saveView');
-
+      
           const highlightLabel = document.getElementById('highlightLabel');
           const viewsLabel = document.getElementById('viewsLabel');
-
+      
           const localFavs = document.getElementById('localFavs');
           document.getElementById('localFavsViews');
-
-
-          const projectId = new URLSearchParams(window.location.search).get('projectId');
-
+      
+      
+          const projectId = this.getProjectName();
+      
           document.getElementById('savedSelections').addEventListener('click', function() {
               const localFavsContainer = document.getElementById('localFavs');
               
@@ -168057,24 +168289,24 @@
                   localFavsContainer.style.display = 'none';
               }
           });
-
+      
           if (projectId) {
               const saves = JSON.parse(localStorage.getItem(projectId)) || [];
               localFavs.innerHTML = ''; // Clear previous content
-
+      
               localFavs.addEventListener('click', function() {
                   localFavs.style.display = 'none';
               });
-
+      
               this.loadButtonsHighlight(localFavs, saves);
               
           } else {
               console.error('No project ID found in the URL.');
           }
-
+      
           saveView.addEventListener('click', function() {
               saveModalView.style.display = 'block';
-
+      
           });
           
           toggleDiv.addEventListener('change', function(event) {
@@ -168083,27 +168315,27 @@
               if (isEnabled) {
                   highlightLabel.style.color = 'gray';
                   viewsLabel.style.color = 'white';
-
+      
                   viewsView.style.display = 'block';
                   searchView.style.display = 'none';
               } else {
                   highlightLabel.style.color = 'white';
                   viewsLabel.style.color = 'gray';
-
+      
                   viewsView.style.display = 'none';
                   searchView.style.display = 'block';
               }
           }.bind(this));  
-
-
+      
+      
           favoriteButton.addEventListener('click', function() {
               saveModal.style.display = 'block';
           }.bind(this));  
-
+      
           confirmSaveButton.addEventListener('click', function() {
               const saveName = saveHighlightInput.value;
               const items = searchItems.innerHTML;
-              const projectId = new URLSearchParams(window.location.search).get('projectId');
+              const projectId = this.getProjectName();
       
               if (!saveName) {
                   alert('Please enter a name for the save.');
@@ -168115,25 +168347,25 @@
                   return;
               }
       
-
+      
               // Screenshot process
-              const viewer = bimViewer.viewer;  // Assuming the viewer is accessible via bimViewer.viewer
+              const viewer =this.bimViewer.viewer;  // Assuming the viewer is accessible via this.bimViewer.viewer
               const canvasElement = viewer.scene.canvas.canvas;  // Access the canvas element
-
+      
               // Get the aspect ratio of the canvas
               const aspect = canvasElement.height / canvasElement.width;
-
+      
               // Set desired width and height for the screenshot
               const width = 200;  // Set your desired width
               const height = Math.floor(width * aspect);  // Calculate the corresponding height to maintain aspect ratio
-
+      
               // Capture screenshot using viewer.getSnapshot()
               const imageData = viewer.getSnapshot({
                   format: "png",
                   width: width,
                   height: height
               });
-
+      
               const newSave = {
                   name: saveName,
                   content: items,
@@ -168141,22 +168373,22 @@
               };
               
               let savedProjects = JSON.parse(localStorage.getItem(projectId)) || [];
-
+      
               savedProjects.push(newSave);
               localStorage.setItem(projectId, JSON.stringify(savedProjects));
               savedProjects = JSON.parse(localStorage.getItem(projectId)) || [];
               
-              bimViewer._searchExplorer.loadButtonsHighlight(localFavs, savedProjects);
-
+              this.bimViewer._searchExplorer.loadButtonsHighlight(localFavs, savedProjects);
+      
               saveModal.style.display = 'none'; 
               saveHighlightInput.value = '';
           }.bind(this));  
-
+      
           confirmSaveButtonView.addEventListener('click', function() {
               
-              const projectId = new URLSearchParams(window.location.search).get('projectId');
+              const projectId = this.getProjectName();
               let saveName = saveViewInput.value;
-
+      
               if (!saveName) {
                   alert('Please enter a name for the save.');
                   return;
@@ -168166,66 +168398,66 @@
                   alert('No project ID found in the URL.');
                   return;
               }
-
-              let fullState = bimViewer._searchExplorer.getCurrentView();
+              console.log(this.bimViewer);
+              let fullState = this.bimViewer._searchExplorer.getCurrentView();
               fullState.name = saveName;
-
+      
               // Screenshot process
-              const viewer = bimViewer.viewer;  // Assuming the viewer is accessible via bimViewer.viewer
+              const viewer = this.bimViewer.viewer;  // Assuming the viewer is accessible via this.bimViewer.viewer
               const canvasElement = viewer.scene.canvas.canvas;  // Access the canvas element
-
+      
               // Get the aspect ratio of the canvas
               const aspect = canvasElement.height / canvasElement.width;
-
+      
               // Set desired width and height for the screenshot
               const width = 200;  // Set your desired width
               const height = Math.floor(width * aspect);  // Calculate the corresponding height to maintain aspect ratio
-
+      
               // Capture screenshot using viewer.getSnapshot()
               const imageData = viewer.getSnapshot({
                   format: "png",
                   width: width,
                   height: height
               });
-
+      
               // Add the screenshot to the fullState object as a base64 string
               fullState.screenshot = imageData;  // This will be a Base64 PNG image
-
+      
               // Log the fullState object
               console.log(fullState);
-
+      
       
               let savedViews = JSON.parse(localStorage.getItem('views-' + projectId)) || [];
       
               savedViews.push(fullState);
               localStorage.setItem('views-' + projectId, JSON.stringify(savedViews));
               
-              bimViewer._searchExplorer.loadButtonsView();
-
+              this.bimViewer._searchExplorer.loadButtonsView();
+      
               saveModalView.style.display = 'none';
               saveViewInput.value = '';
           }.bind(this));
-
+      
           cancelButton.addEventListener('click', function() {
               saveModal.style.display = 'none';
               saveHighlightInput.value = '';
           }.bind(this));
-
+      
           cancelButtonView.addEventListener('click', function() {
               saveModalView.style.display = 'none';
               saveViewInput.value = '';  
           }.bind(this));
-
+      
           const searchInput = document.getElementById('searchInput');
           const colorSelect = document.getElementById('colorPickerHighlight');
           this.updateSelectColor();
           this.loadButtonsView();
-
+      
       
           if (searchInput) {
               searchInput.addEventListener('input', function() {
                   const searchTerm = searchInput.value;
-
+      
                   if (typeof this.searchObject === 'function') {
                       if (this.searchObject(searchTerm)){
                           searchInput.value = '';
@@ -168235,7 +168467,7 @@
           
                           // Remove the class after the animation ends (1s)
                           document.getElementById('favoriteButton').style.display = 'block';
-
+      
                           setTimeout(function() {
                               searchInput.classList.remove('green-flash');
                           }, 2000);
@@ -168244,7 +168476,7 @@
                       console.warn('searchObject function is not defined.');
                   }
               }.bind(this));
-
+      
               colorSelect.addEventListener('change', function() {
                   this.updateSelectColor();
                   console.log('Selected color:', colorSelect.value);
@@ -168252,9 +168484,9 @@
           } else {
               console.error('Search input element not found.');
           }
-
+      
       }
-
+      
       getCurrentView() {
           // CAMERA STATE
           const camera = this.bimViewer.viewer.scene.camera;
@@ -168421,7 +168653,7 @@
           }
       
       }
-
+      
       loadButtonsHighlight(localFavs,saves) {
           const projectId = this.getProjectName();
           localFavs.innerHTML = '';
@@ -168677,8 +168909,9 @@
               localFavs.appendChild(projectContainer);
           });
       }
+      
+      expandParents(element, treeView, step) {
 
-      expandParents(element, treeView) {
           const switchId = `switch-${element.id}`;
           const switchElement = document.getElementById(switchId);
       
@@ -168686,29 +168919,31 @@
               treeView._expandSwitchElement(switchElement);
               this.expended.push(switchElement);
           }
-      
-          const ulElements = element.querySelectorAll('ul');
-          ulElements.forEach(ul => {
-              ul.querySelectorAll('li').forEach(childLi => {
-                  this.expandParents(childLi, treeView); // Recursively expand child elements
+          
+          if (step){ // dont go further in the three if step is 1
+              const ulElements = element.querySelectorAll('ul');
+              ulElements.forEach(ul => {
+                  ul.querySelectorAll('li').forEach(childLi => {
+                      this.expandParents(childLi, treeView, --step); // Recursively expand child elements
+                  });
               });
-          });
+          }
       };
-
+      
       collapseParents(elements, treeView){
           Array.from(elements).forEach(switchElement => {
               treeView._collapseSwitchElement(switchElement);
           });
       }
-
-      processStateAndExpand(state, treeView) {
+      
+      processStateAndExpand(state, treeView, step = 20) {
           const firstElem = document.getElementById(state[0].id);
           const firstLiElement = firstElem?.closest('li');
           if (firstLiElement) {
-              this.expandParents(firstLiElement, treeView);
+              this.expandParents(firstLiElement, treeView, step);
           }
       };
-
+      
       updateSelectColor() {
           const colorSelect = document.getElementById('colorPickerHighlight');
           colorSelect.style.backgroundColor = colorSelect.value;
@@ -168720,7 +168955,7 @@
           ];
           console.log(this.colorize);
       }
-
+      
       drawElements(historyIndex = 0) {
           let htmlContainer = document.getElementById('container-container');
           const viewer = this.viewer;
@@ -168746,6 +168981,7 @@
                       container.style.marginLeft = '21px';
       
                       container.innerHTML = `
+    
                         <input type="checkbox" class="checkbox-${entity.id}" id="${this.colorize}" name="single" checked>
                         <label for="checkbox-${entity.id}">
                             <span class="element">${entity.id}</span>
@@ -168754,7 +168990,7 @@
                             <i class="fas fa-trash"></i>
                         </a>
                     `;
-
+      
                       htmlContainer.appendChild(container);
       
                       const trashAnchor = document.getElementById(`trash-${entity.id}`);
@@ -168767,7 +169003,7 @@
                               document.getElementById('favoriteButton').style.display = 'none';
                           }
                       });
-
+      
                   }
               } else {
                   let parentContainerId = `container-${entity.parent}`;
@@ -168855,7 +169091,7 @@
       }
       
       
-
+      
       clear() {
           for(let i=0;i<this.highlighted.length; i++){
               let entityTmp = this.viewer.scene.objects[this.highlighted[i].id];
@@ -168863,7 +169099,7 @@
               this.highlighted.splice(i, 1);
           }
       }
-
+      
       getFromArray(parent){
           var arr = [];
           for(let i=0;i<this.highlighted.length; i++){
@@ -168873,11 +169109,11 @@
           }
           return arr;
       }
-
+      
       setEnabledEntity(enabled, id) {
           let entityTmp = this.viewer.scene.objects[id];
           let checkboxes = document.getElementsByClassName(`checkbox-${entityTmp.id}`);
-
+      
           for (let i = 0; i < checkboxes.length; i++) {
               if (!enabled) {
                   entityTmp.colorize = undefined;
@@ -168888,13 +169124,13 @@
               }
           }
       }
-
+      
       setEnabledParent(enabled, parent) {
           let props = this.getFromArray(parent);
           for (let i = 0; i < props.length; i++) {
               let entityTmp = this.viewer.scene.objects[props[i].id];
               let checkboxes = document.getElementsByClassName(`checkbox-${entityTmp.id}`);
-
+      
               for (let i = 0; i < checkboxes.length; i++) {
                   if (!enabled) {
                       entityTmp.colorize = undefined;
@@ -168906,7 +169142,7 @@
               }
           }
       }
-
+      
       _setupCheckboxListeners() {
           let freqMap = {};
       
@@ -168926,7 +169162,7 @@
                       }.bind(this));
                   }
               });
-
+      
               if (entity.id != entity.parent && !freqMap[entity.parent]) {
                   Array.from(checkboxesParent).forEach(checkboxParent => {
                       if (checkboxParent) {
@@ -168942,10 +169178,10 @@
                   freqMap[entity.parent] = 1;
               }
           }
-
+      
       }
-
-
+      
+      
       destroy() {
           super.destroy();
           this._treeView.destroy();
@@ -168984,7 +169220,43 @@
           });
 
           this._buttonElement.addEventListener("click", (event) => {
+
               if (this.getEnabled()) {
+                  if (this.getActive()){
+                      this.bimViewer.openTab('storeys');
+
+                      // STOREYS STATE
+                      let storeysTree = this.bimViewer._storeysExplorer._treeView;
+                      let searchExplorer = this.bimViewer._searchExplorer;
+                  
+                      const storeys = document.getElementsByClassName('xeokit-storeys xeokit-tree-panel')[0].getElementsByTagName('input');
+                      searchExplorer.processStateAndExpand(storeys, storeysTree, 0); //0 means just one expand, default is maximum 20
+
+                      let allShown = true;
+                      Array.from(storeys).forEach((storey, index) => {
+
+                          if (!storey.checked){
+                              allShown = false;
+                          }
+
+                      });
+                      
+                      if (allShown) {
+                          Array.from(storeys).forEach((storey, index) => {
+
+                              if (index > 1){
+                                  if (!storey.checked){
+                                      return;
+                                  }
+                                  storeysTree._changeStructure(storey, false);
+                              }
+                              else {
+                                  storeysTree._changeStructure(storey, true);
+                              }
+                          });
+                      }
+                  }
+
                   this.bimViewer._sectionTool.hideControl();
                   this.setActive(!this.getActive(), () => { // Animated
                   });
@@ -170848,7 +171120,9 @@
 
           if (sum != 0){
               spanTotal.textContent = "Total: " + sum.toFixed(2) + unit;
-              document.getElementById('nomeasuretext').innerHTML = '';
+              if (document.getElementById('nomeasuretext')){
+                  document.getElementById('nomeasuretext').innerHTML = '';
+              }
           }
       }
 
@@ -171100,7 +171374,7 @@
   }
 
   function createInspectorTemplate() {
-      const inspectorTemplate = `<div class="xeokit-tabs">  
+      const inspectorTemplate = `<div class="xeokit-tabscustom">  
     <div class="xeokit-tab xeokit-propertiesTab">
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#" data-xeokit-i18n="propertiesInspector.title">Properties</a>
         <div class="xeokit-tab-content">        
@@ -171111,12 +171385,13 @@
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Measurements</a>
         <div class="xeokit-tab-content">        
         <div id="xeokit-measurements" class="xeokit-measurements"></div>
+        <div id="xeokit-measurements-area" class="xeokit-measurements"></div>
         </div>
     </div>
     <div class="xeokit-tab xeokit-optionsTab">
         <a class="xeokit-i18n xeokit-tab-btn disabled" href="#">Options</a>
         <div class="xeokit-tab-content">
-            <div id="xeokit-options" class="xeokit-options">Optiuni</div>
+            <div id="xeokit-options" class="xeokit-options">Options</div>
         </div>
     </div>
 </div>`;
