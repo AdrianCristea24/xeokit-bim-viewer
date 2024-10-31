@@ -280,18 +280,18 @@ body {
     width: calc(100% - var(--left));
 }
 
-@keyframes fadeGreenToWhite {
+@keyframes fadeBlueToWhite {
     0% {
-        background-color: #7CD644;
+        background-color: #44a3d6;
     }
     100% {
-        background-color: rgba(255, 255, 255, 0);
+        background-color: rgb(255, 255, 255);
     }
 }
 
-.green-flash {
-    background-color: #7CD644;
-    animation: fadeGreenToWhite 2s forwards;
+.blue-flash {
+    background-color: #44a3d6;
+    animation: fadeBlueToWhite 1.5s forwards;
 }
 
 .annotation-marker {
@@ -365,11 +365,10 @@ body {
     font: normal 14px arial, serif;
 }
 
-#favoriteButton:hover {
-    fill: gold; /* Slight change in color on hover */
-    transform: scale(1.3); /* Slightly increase size */
-    transition: all 0.2s ease-in-out; /* Smooth transition */
-}
+/* #favoriteButton:hover {
+    transform: scale(1.3); 
+    transition: all 0.2s ease-in-out;
+} */
 
 #saveModal, #saveModalView, #localFavs  {
     position: fixed;
@@ -404,7 +403,6 @@ body {
 /* Optional: Style the span to indicate it's clickable */
 #savedSelections {
     cursor: pointer;
-    font-weight: bold;
 }
 
 /* Modern buttons with padding and rounded corners */

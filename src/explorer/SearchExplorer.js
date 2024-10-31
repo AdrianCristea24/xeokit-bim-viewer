@@ -278,20 +278,22 @@ class SearchExplorer extends Controller {
                     <input type="color" id="colorPickerHighlight" name="colorPicker" value="#7CD644">
                 </div>
                 <br>
-                <div style="display: flex; align-items: center;">
-                    <label for="searchInput" style="margin-right: 10px;">Search</label>
-                    <input type="text" style="width: 225px; margin-right: 10px; color: white" id="searchInput" placeholder="by Id,Name,Class,Type,Reference">
-                    
-                    <div class="icon-container">
-                        <svg id="savedSelections" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24px" height="24px" style="display: block; cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <!-- First Icon with Text Button -->
+                    <button id="savedSelections" class="icon-button" style="display: flex; align-items: center; gap: 5px; background: none; border: none; cursor: pointer; color: white;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24px" height="24px" style="vertical-align: middle;">
                             <path d="M20 4h-4.23l-1.39-2.78A1 1 0 0 0 14.5 1h-5a1 1 0 0 0-.88.5L7.23 4H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM12 4l1.25 2.5h-2.5L12 4zm-6 2h12v2H6V6zm12 14H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6v-2h12v2z"/>
                         </svg>
-                        <div class="tooltip">View Favorites</div>
-                    </div>
-    
-                    <svg id="favoriteButton" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="yellow" width="24px" height="24px" style="display: none; cursor: pointer;">
-                        <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
-                    </svg>
+                        <span >Load Selection</span>
+                    </button>
+
+                    <!-- Second Icon with Text Button -->
+                    <button id="favoriteButton" class="icon-button" style="display: none; align-items: center; background: none; border: none; cursor: pointer; color: white;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="yellow" width="25px" height="25px" style="vertical-align: middle;">
+                            <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
+                        </svg>
+                        <span style="vertical-align: middle;">Save Selection</span>
+                    </button>
                 </div>
                 <br>
     
@@ -550,16 +552,33 @@ class SearchExplorer extends Controller {
                 if (typeof this.searchObject === 'function') {
                     if (this.searchObject(searchTerm)){
                         searchInput.value = '';
+                        this.bimViewer.openTab('search');
+                        const toggleDiv = document.getElementById('toggleDiv');
+                        const searchView = document.getElementById('searchView');
+                        const viewsView = document.getElementById('viewsView');
+                        const highlightLabel = document.getElementById('highlightLabel');
+                        const viewsLabel = document.getElementById('viewsLabel');
+
+                        toggleDiv.checked = false;
+                        highlightLabel.style.color = 'white';
+                        viewsLabel.style.color = 'gray';
+            
+                        viewsView.style.display = 'none';
+                        searchView.style.display = 'block';
+
+                        const toggleExplorer = document.getElementById("explorer_toggle");
+                        toggleExplorer.checked = true;
+
                         
                         // Trigger the green flash
-                        searchInput.classList.add('green-flash');
+                        searchInput.classList.add('blue-flash');
         
                         // Remove the class after the animation ends (1s)
                         document.getElementById('favoriteButton').style.display = 'block';
     
                         setTimeout(function() {
-                            searchInput.classList.remove('green-flash');
-                        }, 2000);
+                            searchInput.classList.remove('blue-flash');
+                        }, 1000);
                     }
                 } else {
                     console.warn('searchObject function is not defined.');
@@ -605,7 +624,7 @@ class SearchExplorer extends Controller {
         // MODELS STATE
         let modelState = [];
         this.expended = [];
-        let modelTree = this.bimViewer._modelsExplorer._treeView;
+        this.bimViewer._modelsExplorer._treeView;
         let modelArr = document.getElementsByClassName('xeokit-form-check');
     
         for(let i=0; i<modelArr.length; i++){
@@ -682,13 +701,13 @@ class SearchExplorer extends Controller {
     setCurrentView(fullState) {
         // Process Models state
         this.expended = [];
-        let modelsTree = this.bimViewer._modelsExplorer._treeView;
+        this.bimViewer._modelsExplorer._treeView;
     
         if (fullState.modelsState[0]){
             this.bimViewer._modelsExplorer.unloadAllModels();
     
             fullState.modelsState.forEach(model => {
-                const target = document.getElementById(model.id);
+                document.getElementById(model.id);
     
                 if (model.checked) {
     
@@ -976,7 +995,7 @@ class SearchExplorer extends Controller {
                     saves = JSON.parse(localStorage.getItem(projectId)) || [];
     
                     bimV._searchExplorer.loadButtonsHighlight(localFavs, saves);
-                    let modelsTree = bimV._modelsExplorer._treeView;
+                    bimV._modelsExplorer._treeView;
     
                     document.body.removeChild(contextMenu);
                     button.remove(); 

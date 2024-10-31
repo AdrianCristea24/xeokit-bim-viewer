@@ -17,6 +17,26 @@ class SelectionTool extends Controller {
         }
 
         const buttonElement = cfg.buttonElement;
+        this.measurementCanvasElementArea =  document.getElementById("xeokit-measurements-area");
+
+        // Create a div element for the text panel
+        var measureObj = document.getElementById("textOverlayArea") ?? null;
+        if (!measureObj){
+            this._textOverlayElement = document.createElement('span');
+            this._textOverlayElement.id = 'textOverlayArea';
+            this._textOverlayElement.className = 'xeokit-btn-group-measure';
+
+            const container = this.measurementCanvasElementArea;
+
+            if (container) {
+                container.appendChild(this._textOverlayElement);
+            } else {
+                console.error("Canvas container is not defined.");
+            }
+        }
+
+        measureObj = document.getElementById("textOverlayArea");
+        measureObj.innerHTML = '';
 
         const annotations = new AnnotationsPlugin(this.viewer, {
             markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
@@ -62,41 +82,137 @@ class SelectionTool extends Controller {
         this.viewer.cameraControl.on("pickedNothing", (e) => {
             for(let i = 0; i < this.selected.length; i++) {
                 annotations.destroyAnnotation([this.selected[i]]);
+                this.viewer.scene.objects[this.selected[i]].colorize = undefined;
                 this.viewer.scene.objects[this.selected[i]].selected = false;
             }
             this.selected = [];
+
+            let spanTotal = document.getElementById("spanTotalArea");
+            let measureObj = document.getElementById("textOverlayArea");
+
+            if (spanTotal){
+                spanTotal.textContent = '';
+            }
+
+            if (measureObj) {
+                measureObj.innerHTML = '';
+            }
         });
 
         this.on("active", (active) => {
             const viewer = this.viewer;
             if (active) {
                 buttonElement.classList.add("active");
+                let measureObj = document.getElementById("textOverlayArea");
+
                 this._onPick = this.viewer.cameraControl.on("picked", (pickResult) => {
                     if (!pickResult.entity) {
                         return;
                     }
                     pickResult.entity.selected = !pickResult.entity.selected;
-                    if (!pickResult.entity.selected){
 
+                    let spanTotal = document.createElement('span');
+                    measureObj.innerHTML = "";
+                    spanTotal.textContent = '';
+                    spanTotal.className = 'spanTotal';
+                    spanTotal.id = 'spanTotalArea';
+                    measureObj.appendChild(spanTotal);
+
+                    if (!pickResult.entity.selected){
                         let index = this.selected.indexOf(pickResult.entity.id);
                         if (index !== -1) { 
                             annotations.destroyAnnotation([this.selected[index]]);
                             viewer.scene.objects[this.selected[index]].selected = false;
+                            viewer.scene.objects[this.selected[index]].colorize = undefined;
                             this.selected.splice(index, 1);
                         }
 
-                        return;
-                    }
+                        this.totalArea = 0;
+                        this.selected.forEach(element => {
+                            let tmp = this.viewer.scene.objects[element];
+                            tmp.colorize = undefined;
+                            let distance = parseFloat(tmp.surfaceArea.toFixed(2));
+                            this.totalArea += distance;
 
+                            let span = document.createElement('span');
+                            let br = document.createElement('br');
+                            let copytext = distance + ' m²';
+
+                            span.addEventListener('click', function() {
+                                navigator.clipboard.writeText(copytext).then(() => {
+                                    console.log('Text copied to clipboard:', copytext);
+                                }).catch(err => {
+                                    console.error('Failed to copy text:', err);
+                                });
+                            });
+                            
+                            span.className = 'clickable-span';
+                            span.textContent = "•  " +  distance + ' m²';
+                
+                            measureObj.appendChild(span);
+                            measureObj.appendChild(br);
+                        });
+
+                        if (spanTotal){
+                            if (this.totalArea == 0){
+                                spanTotal.textContent = "";
+                                return;
+                            }
+                            spanTotal.textContent = "Total Area: " + this.totalArea.toFixed(2) + " m²";
+                        }
+                        return;
+
+                    }
+                   
                     if (!this.ctrlPressed){
                         for(let i = 0; i < this.selected.length; i++) {
                             annotations.destroyAnnotation([this.selected[i]]);
                             viewer.scene.objects[this.selected[i]].selected = false;
+                            viewer.scene.objects[this.selected[i]].colorize = undefined;
                         }
                         this.selected = [];
                     }
-
                     this.selected.push(pickResult.entity.id);
+
+
+                    this.totalArea = 0;
+                    this.selected.forEach(element => {
+                        let tmp = this.viewer.scene.objects[element];
+                        tmp.colorize = undefined;
+                        let distance = parseFloat(tmp.surfaceArea.toFixed(2));
+                        this.totalArea += distance;
+
+                        let span = document.createElement('span');
+                        let br = document.createElement('br');
+                        let copytext = distance + ' m²';
+
+                        span.addEventListener('click', function() {
+                            navigator.clipboard.writeText(copytext).then(() => {
+                                console.log('Text copied to clipboard:', copytext);
+                            }).catch(err => {
+                                console.error('Failed to copy text:', err);
+                            });
+                        });
+                        
+                        span.className = 'clickable-span';
+                        span.textContent = "•  " +  distance + ' m²';
+            
+                        measureObj.appendChild(span);
+                        measureObj.appendChild(br);
+                    });
+
+                    if (spanTotal) {
+                        spanTotal.textContent = "Total Area: " + this.totalArea.toFixed(2) + " m²";
+                    }
+
+                    if (this.selected.length > 1){
+                        pickResult.entity.colorize = [1, 1, 0]; // RGB for highlight
+                        //     pickResult.entity.scene.components['default.selectedMaterial']._state.fillColor = [1, 0, 0];
+                        //     console.log(pickResult.entity.id);
+                        //     console.log(pickResult.entity);
+                        //     console.log(this.viewer.scene.objects["08f4t_E$rBBQFcvLzljACh"]);
+                        //     this.viewer.scene.objects["08f4t_E$rBBQFcvLzljACh"].scene.components['default.selectedMaterial']._state.fillColor = [0, 0, 1];
+                    }
 
                     document.getElementById('inspector_toggle').checked = true;
 

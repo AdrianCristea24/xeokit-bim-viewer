@@ -90,6 +90,7 @@ function createToolbarTemplate(cfg = {}) {
     const toolbarTemplate = `<div class="xeokit-toolbar">
     <!-- Reset button -->
     <div class="xeokit-btn-group">
+        <input type="input" class="xeokit-i18n xeokit-btn" id="searchInput" placeholder="Serach by Id,Name,Class,Type,Reference"></input>
         <button type="button" class="xeokit-i18n xeokit-reset xeokit-btn fa fa-home fa-2x disabled" data-xeokit-i18ntip="toolbar.resetViewTip" data-tippy-content="Reset view"></button>
     </div>
     <div class="xeokit-btn-group" role="group">
