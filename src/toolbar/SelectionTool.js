@@ -39,7 +39,7 @@ class SelectionTool extends Controller {
         measureObj.innerHTML = '';
 
         const annotations = new AnnotationsPlugin(this.viewer, {
-            markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
+            markerHTML: "<div class='annotation-marker-two'>{{glyph}}</div>",
            
 
             values: {

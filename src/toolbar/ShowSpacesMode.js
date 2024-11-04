@@ -39,7 +39,7 @@ class ShowSpacesMode extends Controller {
                     const switchElement = document.getElementById(switchId);
                 
                     if (switchElement && switchElement.classList.contains('plus')) {
-                        this.classTree._expandSwitchElement(switchElement)
+                        this.classTree._expandSwitchElement(switchElement);
                     }
                     let ifcspace = '';
                     
@@ -69,6 +69,25 @@ class ShowSpacesMode extends Controller {
     
                     });
                     changed = [];
+                }
+
+                if (true){
+                    let word = 'IfcSpace';
+                    for (const key in this.viewer.scene.objects) {
+                        let metadata = this.bimViewer._searchExplorer.getObjectPropertySets(key);
+                        let entity = null;
+                        let entityId = null;
+                        
+                        if (metadata.type && metadata.type.toLowerCase() === word.toLowerCase()) { // Class
+                            entityId = metadata.id;
+
+                            entity = this.viewer.scene.objects[entityId];
+                            if (entity.opacity == 0.5){
+                                break;
+                            }
+                            entity.opacity = 0.5;
+                        }
+                    }
                 }
     
             }

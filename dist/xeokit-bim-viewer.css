@@ -26,6 +26,26 @@
     z-index: 0;
 }
 
+.annotation-marker-two {
+    color: #ffffff;
+    line-height: 1.8;
+    text-align: center;
+    font-family: "monospace";
+    font-weight: bold;
+    position: absolute;
+    max-width: 180px;
+    height: 40px;
+    background: rgba(128, 128, 128, 0);
+    visibility: hidden;
+    z-index: 0;
+    /* Adaugă un contur negru în jurul textului */
+    text-shadow: 
+        -1px -1px 0 #000, 
+         1px -1px 0 #000, 
+        -1px  1px 0 #000, 
+         1px  1px 0 #000;
+}
+
 .annotation-label {
     position: absolute;
     max-width: 250px;
