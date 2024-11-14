@@ -60,6 +60,10 @@ class ThreeDMode extends Controller {
                                 }
                                 storeysTree._changeStructure(storey, false);
                             }
+                            else if (index == 1){
+                                storeysTree._changeStructure(storey, true);
+                                storeysTree.checkIfStoreys(storey);
+                            }
                             else{
                                 storeysTree._changeStructure(storey, true);
                             }

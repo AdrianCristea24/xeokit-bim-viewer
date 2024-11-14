@@ -39,9 +39,8 @@ class SelectionTool extends Controller {
         measureObj.innerHTML = '';
 
         const annotations = new AnnotationsPlugin(this.viewer, {
-            markerHTML: "<div class='annotation-marker-two'>{{glyph}}</div>",
+            markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
            
-
             values: {
                 markerBGColor: "black",
                 labelBGColor: "white",
@@ -247,6 +246,8 @@ class SelectionTool extends Controller {
                                 glyph: "" + pickResult.entity.surfaceArea.toFixed(2) + " m²",
                             }
                         });
+
+                        
                     }
 
                 });

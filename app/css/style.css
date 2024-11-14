@@ -53912,3 +53912,63 @@ span.flatpickr-weekday {
     opacity: .55;
     color: #99A4AD;
 }
+
+.toolbar-input-wrapper {
+    display: inline-block;
+    position: relative;
+}
+#searchInput {
+    pointer-events: auto;
+    padding: 6px 10px;
+    font-size: 14px;
+    z-index: 10; /* Bring the input above other elements if necessary */
+}
+
+.input-overlay {
+    position: absolute;
+    top: 10px; /* Adjust this value to match your toolbar’s position */
+    right: 20px; /* Adjust to place it correctly */
+    width: 200px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    z-index: 1000; /* Ensures it appears above other elements */
+}
+
+.input-like-button {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    color: #aaa; /* Placeholder text color */
+    text-align: left;
+    cursor: text;
+}
+
+.input-like-button.active {
+    color: 'black'; /* Text color when input is active */
+}
+
+.annotation-marker-two {
+    color: #ffffff;
+    line-height: 1.8;
+    text-align: center;
+    font-family: "monospace";
+    font-weight: bold;
+    position: absolute;
+    max-width: 180px;
+    height: 40px;
+    background: rgba(128, 128, 128, 0);
+    visibility: hidden;
+    z-index: 0;
+    text-shadow: 
+        -1px -1px 0 #000, 
+         1px -1px 0 #000, 
+        -1px  1px 0 #000, 
+         1px  1px 0 #000;
+}
+

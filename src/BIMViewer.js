@@ -90,7 +90,9 @@ function createToolbarTemplate(cfg = {}) {
     const toolbarTemplate = `<div class="xeokit-toolbar">
     <!-- Reset button -->
     <div class="xeokit-btn-group">
-        <input type="input" class="xeokit-i18n xeokit-btn" id="searchInput" placeholder="Serach by Id,Name,Class,Type,Reference"></input>
+        <input type="input" class="xeokit-i18n xeokit-btn input-like-button" id="searchInput" placeholder="Search by Id, Name, Class, Type, Reference"></input>
+    </div>
+    <div class="xeokit-btn-group">
         <button type="button" class="xeokit-i18n xeokit-reset xeokit-btn fa fa-home fa-2x disabled" data-xeokit-i18ntip="toolbar.resetViewTip" data-tippy-content="Reset view"></button>
     </div>
     <div class="xeokit-btn-group" role="group">
@@ -410,6 +412,32 @@ class BIMViewer extends Controller {
             buttonElement: toolbarElement.querySelector(".xeokit-fit"),
             active: false
         });
+
+        const inspectorContainer = document.querySelector('.op-ifc-viewer--inspector-container');
+
+        if (inspectorContainer) {
+            const observer = new MutationObserver((mutationsList) => {
+                for (const mutation of mutationsList) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const width = inspectorContainer.offsetWidth + 'px';
+                        console.log(document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.width);
+                        
+                        if (inspectorContainer.classList.contains('op-ifc-viewer--inspector-container-hidden')) {
+                            document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.display = "block";
+                            document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.width = '469px';
+                        }
+                        else{
+                            document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.display = "none";
+                            inspectorContainer.style.width = '469px';
+                        }
+
+                    }
+                }
+            });
+
+            // Start observing the inspectorContainer for attribute changes
+            observer.observe(inspectorContainer, { attributes: true });
+        }
 
         // Allows Three-D and First Person toggle buttons to cooperatively switch
         // CameraControl#navMode between "orbit", "firstPerson" and "planView" modes

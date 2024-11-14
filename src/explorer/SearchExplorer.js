@@ -82,21 +82,24 @@ class SearchExplorer extends Controller {
         let freqMap = {};
         let found = false;
     
+        // Convert the search word to lowercase for case-insensitive search
+        const lowerCaseWord = word.toLowerCase();
+    
         for (const key in this.viewer.scene.objects) {
             let metadata = this.getObjectPropertySets(key);
-            console.log(metadata.propertySets[0]);
             let entity = null;
             let entityId = null;
     
-            if (key === word) { //ID
+            // Check if the word is a substring in any target string, case-insensitively
+            if (key.toLowerCase().includes(lowerCaseWord)) { // ID
                 entityId = key;
-            } else if (metadata.name && metadata.name === word) { //Name
+            } else if (metadata.name && metadata.name.toLowerCase().includes(lowerCaseWord)) { // Name
                 entityId = metadata.id;
-            } else if (metadata.parent && metadata.parent.name && metadata.parent.name.toLowerCase() === word.toLowerCase()) { // Class
+            } else if (metadata.parent && metadata.parent.name && metadata.parent.name.toLowerCase().includes(lowerCaseWord)) { // Class
                 entityId = metadata.id;
-            } else if (metadata.type && metadata.type.toLowerCase() === word.toLowerCase()) { // Type
+            } else if (metadata.type && metadata.type.toLowerCase().includes(lowerCaseWord)) { // Type
                 entityId = metadata.id;
-            } else if (metadata.propertySets && Array.isArray(metadata.propertySets)) { // Referance From Metadata
+            } else if (metadata.propertySets && Array.isArray(metadata.propertySets)) { // Reference From Metadata
                 for (let i = 0; i < metadata.propertySets.length; i++) {
                     let propertySet = metadata.propertySets[i];
                     if (propertySet && Array.isArray(propertySet.properties)) {
@@ -105,8 +108,8 @@ class SearchExplorer extends Controller {
                             if (
                                 property.name && 
                                 property.name.toLowerCase() === 'reference' && 
-                                property.value && 
-                                property.value.toLowerCase() === word.toLowerCase()
+                                property.value &&
+                                property.value.toLowerCase().includes(lowerCaseWord)
                             ) {
                                 entityId = metadata.id;
                                 i = metadata.propertySets.length; // break outer loop
@@ -546,44 +549,100 @@ class SearchExplorer extends Controller {
     
     
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const searchTerm = searchInput.value;
-    
-                if (typeof this.searchObject === 'function') {
-                    if (this.searchObject(searchTerm)){
-                        searchInput.value = '';
-                        this.bimViewer.openTab('search');
-                        const toggleDiv = document.getElementById('toggleDiv');
-                        const searchView = document.getElementById('searchView');
-                        const viewsView = document.getElementById('viewsView');
-                        const highlightLabel = document.getElementById('highlightLabel');
-                        const viewsLabel = document.getElementById('viewsLabel');
-
-                        toggleDiv.checked = false;
-                        highlightLabel.style.color = 'white';
-                        viewsLabel.style.color = 'gray';
+            searchInput.addEventListener('keydown', function(event) {
+                // Check if the Enter key is pressed and the search input is not empty
+                if (event.key === 'Enter' && searchInput.value.trim() !== '') {
+                    const searchTerm = searchInput.value;
             
-                        viewsView.style.display = 'none';
-                        searchView.style.display = 'block';
-
-                        const toggleExplorer = document.getElementById("explorer_toggle");
-                        toggleExplorer.checked = true;
-
-                        
-                        // Trigger the green flash
-                        searchInput.classList.add('blue-flash');
+                    if (typeof this.searchObject === 'function') {
+                        if (this.searchObject(searchTerm)) {
+                            searchInput.value = '';
+                            this.bimViewer.openTab('search');
+                            const toggleDiv = document.getElementById('toggleDiv');
+                            const searchView = document.getElementById('searchView');
+                            const viewsView = document.getElementById('viewsView');
+                            const highlightLabel = document.getElementById('highlightLabel');
+                            const viewsLabel = document.getElementById('viewsLabel');
         
-                        // Remove the class after the animation ends (1s)
-                        document.getElementById('favoriteButton').style.display = 'block';
-    
-                        setTimeout(function() {
-                            searchInput.classList.remove('blue-flash');
-                        }, 1000);
+                            toggleDiv.checked = false;
+                            highlightLabel.style.color = 'white';
+                            viewsLabel.style.color = 'gray';
+                
+                            viewsView.style.display = 'none';
+                            searchView.style.display = 'block';
+        
+                            const toggleExplorer = document.getElementById("explorer_toggle");
+                            if (toggleExplorer){
+                                toggleExplorer.checked = true;
+                            }
+        
+                            // Trigger the green flash
+                            searchInput.classList.add('blue-flash');
+            
+                            // Remove the class after the animation ends (1s)
+                            document.getElementById('favoriteButton').style.display = 'block';
+        
+                            setTimeout(function() {
+                                searchInput.classList.remove('blue-flash');
+                            }, 1000);
+                        }
+                    } else {
+                        console.warn('searchObject function is not defined.');
                     }
-                } else {
-                    console.warn('searchObject function is not defined.');
                 }
             }.bind(this));
+
+            // searchInput.addEventListener('click', function() {
+            //     // Prompt user for input
+            //     const userInput = prompt("Enter search text:");
+                
+            //     // If the user provides input, set it as the button's label
+            //     if (userInput) {
+            //         searchInput.textContent = userInput;
+            //         searchInput.classList.add("active"); // Change text color to indicate active input
+
+            //         const searchTerm = userInput;
+    
+            //         if (typeof this.searchObject === 'function') {
+            //             if (this.searchObject(searchTerm)){
+            //                 searchInput.value = '';
+            //                 this.bimViewer.openTab('search');
+            //                 const toggleDiv = document.getElementById('toggleDiv');
+            //                 const searchView = document.getElementById('searchView');
+            //                 const viewsView = document.getElementById('viewsView');
+            //                 const highlightLabel = document.getElementById('highlightLabel');
+            //                 const viewsLabel = document.getElementById('viewsLabel');
+
+            //                 toggleDiv.checked = false;
+            //                 highlightLabel.style.color = 'white';
+            //                 viewsLabel.style.color = 'gray';
+                
+            //                 viewsView.style.display = 'none';
+            //                 searchView.style.display = 'block';
+
+            //                 const toggleExplorer = document.getElementById("explorer_toggle");
+            //                 if (toggleExplorer){
+            //                     toggleExplorer.checked = true;
+            //                 }
+
+            //                 // Trigger the green flash
+            //                 searchInput.classList.add('blue-flash');
+            
+            //                 // Remove the class after the animation ends (1s)
+            //                 favoriteButton.style.display = 'block';
+        
+            //                 setTimeout(function() {
+            //                     searchInput.classList.remove('blue-flash');
+            //                 }, 1000);
+            //             }
+            //         }
+
+            //     } else {
+            //         // Reset to placeholder if input is empty
+            //         searchInput.textContent = "Search by Id, Name, Class, Type, Reference";
+            //         searchInput.classList.remove("active");
+            //     }
+            // }.bind(this));
     
             colorSelect.addEventListener('change', function() {
                 this.updateSelectColor();

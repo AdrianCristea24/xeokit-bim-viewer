@@ -157615,7 +157615,7 @@
           const containerElement = cfg.containerElement || document.getElementById(cfg.containerElementId);
 
           const annotations = new AnnotationsPlugin(this.viewer, {
-              markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
+              markerHTML: "<div class='annotation-marker-two'>{{glyph}}</div>",
       
               values: {
                   markerBGColor: "black",
@@ -157884,7 +157884,7 @@
                               labelShown: false,
                   
                               values: {
-                                  glyph: li.outerText,
+                                  glyph: li.outerText  + "<br>" + entity.surfaceArea.toFixed(2) + " m²",
                               }
                           });
 
@@ -165519,7 +165519,6 @@
           const annotations = new AnnotationsPlugin(this.viewer, {
               markerHTML: "<div class='annotation-marker' style='background-color: {{markerBGColor}};'>{{glyph}}</div>",
              
-
               values: {
                   markerBGColor: "black",
                   labelBGColor: "white",
@@ -165725,6 +165724,8 @@
                                   glyph: "" + pickResult.entity.surfaceArea.toFixed(2) + " m²",
                               }
                           });
+
+                          
                       }
 
                   });
@@ -165826,6 +165827,25 @@
       
                       });
                       changed = [];
+                  }
+
+                  {
+                      let word = 'IfcSpace';
+                      for (const key in this.viewer.scene.objects) {
+                          let metadata = this.bimViewer._searchExplorer.getObjectPropertySets(key);
+                          let entity = null;
+                          let entityId = null;
+                          
+                          if (metadata.type && metadata.type.toLowerCase() === word.toLowerCase()) { // Class
+                              entityId = metadata.id;
+
+                              entity = this.viewer.scene.objects[entityId];
+                              if (entity.opacity == 0.5){
+                                  break;
+                              }
+                              entity.opacity = 0.5;
+                          }
+                      }
                   }
       
               }
@@ -167993,21 +168013,24 @@
           let freqMap = {};
           let found = false;
       
+          // Convert the search word to lowercase for case-insensitive search
+          const lowerCaseWord = word.toLowerCase();
+      
           for (const key in this.viewer.scene.objects) {
               let metadata = this.getObjectPropertySets(key);
-              console.log(metadata.propertySets[0]);
               let entity = null;
               let entityId = null;
       
-              if (key === word) { //ID
+              // Check if the word is a substring in any target string, case-insensitively
+              if (key.toLowerCase().includes(lowerCaseWord)) { // ID
                   entityId = key;
-              } else if (metadata.name && metadata.name === word) { //Name
+              } else if (metadata.name && metadata.name.toLowerCase().includes(lowerCaseWord)) { // Name
                   entityId = metadata.id;
-              } else if (metadata.parent && metadata.parent.name && metadata.parent.name.toLowerCase() === word.toLowerCase()) { // Class
+              } else if (metadata.parent && metadata.parent.name && metadata.parent.name.toLowerCase().includes(lowerCaseWord)) { // Class
                   entityId = metadata.id;
-              } else if (metadata.type && metadata.type.toLowerCase() === word.toLowerCase()) { // Type
+              } else if (metadata.type && metadata.type.toLowerCase().includes(lowerCaseWord)) { // Type
                   entityId = metadata.id;
-              } else if (metadata.propertySets && Array.isArray(metadata.propertySets)) { // Referance From Metadata
+              } else if (metadata.propertySets && Array.isArray(metadata.propertySets)) { // Reference From Metadata
                   for (let i = 0; i < metadata.propertySets.length; i++) {
                       let propertySet = metadata.propertySets[i];
                       if (propertySet && Array.isArray(propertySet.properties)) {
@@ -168016,8 +168039,8 @@
                               if (
                                   property.name && 
                                   property.name.toLowerCase() === 'reference' && 
-                                  property.value && 
-                                  property.value.toLowerCase() === word.toLowerCase()
+                                  property.value &&
+                                  property.value.toLowerCase().includes(lowerCaseWord)
                               ) {
                                   entityId = metadata.id;
                                   i = metadata.propertySets.length; // break outer loop
@@ -168457,44 +168480,100 @@
       
       
           if (searchInput) {
-              searchInput.addEventListener('input', function() {
-                  const searchTerm = searchInput.value;
-      
-                  if (typeof this.searchObject === 'function') {
-                      if (this.searchObject(searchTerm)){
-                          searchInput.value = '';
-                          this.bimViewer.openTab('search');
-                          const toggleDiv = document.getElementById('toggleDiv');
-                          const searchView = document.getElementById('searchView');
-                          const viewsView = document.getElementById('viewsView');
-                          const highlightLabel = document.getElementById('highlightLabel');
-                          const viewsLabel = document.getElementById('viewsLabel');
-
-                          toggleDiv.checked = false;
-                          highlightLabel.style.color = 'white';
-                          viewsLabel.style.color = 'gray';
+              searchInput.addEventListener('keydown', function(event) {
+                  // Check if the Enter key is pressed and the search input is not empty
+                  if (event.key === 'Enter' && searchInput.value.trim() !== '') {
+                      const searchTerm = searchInput.value;
               
-                          viewsView.style.display = 'none';
-                          searchView.style.display = 'block';
-
-                          const toggleExplorer = document.getElementById("explorer_toggle");
-                          toggleExplorer.checked = true;
-
-                          
-                          // Trigger the green flash
-                          searchInput.classList.add('blue-flash');
+                      if (typeof this.searchObject === 'function') {
+                          if (this.searchObject(searchTerm)) {
+                              searchInput.value = '';
+                              this.bimViewer.openTab('search');
+                              const toggleDiv = document.getElementById('toggleDiv');
+                              const searchView = document.getElementById('searchView');
+                              const viewsView = document.getElementById('viewsView');
+                              const highlightLabel = document.getElementById('highlightLabel');
+                              const viewsLabel = document.getElementById('viewsLabel');
           
-                          // Remove the class after the animation ends (1s)
-                          document.getElementById('favoriteButton').style.display = 'block';
-      
-                          setTimeout(function() {
-                              searchInput.classList.remove('blue-flash');
-                          }, 1000);
+                              toggleDiv.checked = false;
+                              highlightLabel.style.color = 'white';
+                              viewsLabel.style.color = 'gray';
+                  
+                              viewsView.style.display = 'none';
+                              searchView.style.display = 'block';
+          
+                              const toggleExplorer = document.getElementById("explorer_toggle");
+                              if (toggleExplorer){
+                                  toggleExplorer.checked = true;
+                              }
+          
+                              // Trigger the green flash
+                              searchInput.classList.add('blue-flash');
+              
+                              // Remove the class after the animation ends (1s)
+                              document.getElementById('favoriteButton').style.display = 'block';
+          
+                              setTimeout(function() {
+                                  searchInput.classList.remove('blue-flash');
+                              }, 1000);
+                          }
+                      } else {
+                          console.warn('searchObject function is not defined.');
                       }
-                  } else {
-                      console.warn('searchObject function is not defined.');
                   }
               }.bind(this));
+
+              // searchInput.addEventListener('click', function() {
+              //     // Prompt user for input
+              //     const userInput = prompt("Enter search text:");
+                  
+              //     // If the user provides input, set it as the button's label
+              //     if (userInput) {
+              //         searchInput.textContent = userInput;
+              //         searchInput.classList.add("active"); // Change text color to indicate active input
+
+              //         const searchTerm = userInput;
+      
+              //         if (typeof this.searchObject === 'function') {
+              //             if (this.searchObject(searchTerm)){
+              //                 searchInput.value = '';
+              //                 this.bimViewer.openTab('search');
+              //                 const toggleDiv = document.getElementById('toggleDiv');
+              //                 const searchView = document.getElementById('searchView');
+              //                 const viewsView = document.getElementById('viewsView');
+              //                 const highlightLabel = document.getElementById('highlightLabel');
+              //                 const viewsLabel = document.getElementById('viewsLabel');
+
+              //                 toggleDiv.checked = false;
+              //                 highlightLabel.style.color = 'white';
+              //                 viewsLabel.style.color = 'gray';
+                  
+              //                 viewsView.style.display = 'none';
+              //                 searchView.style.display = 'block';
+
+              //                 const toggleExplorer = document.getElementById("explorer_toggle");
+              //                 if (toggleExplorer){
+              //                     toggleExplorer.checked = true;
+              //                 }
+
+              //                 // Trigger the green flash
+              //                 searchInput.classList.add('blue-flash');
+              
+              //                 // Remove the class after the animation ends (1s)
+              //                 favoriteButton.style.display = 'block';
+          
+              //                 setTimeout(function() {
+              //                     searchInput.classList.remove('blue-flash');
+              //                 }, 1000);
+              //             }
+              //         }
+
+              //     } else {
+              //         // Reset to placeholder if input is empty
+              //         searchInput.textContent = "Search by Id, Name, Class, Type, Reference";
+              //         searchInput.classList.remove("active");
+              //     }
+              // }.bind(this));
       
               colorSelect.addEventListener('change', function() {
                   this.updateSelectColor();
@@ -169268,6 +169347,10 @@
                                       return;
                                   }
                                   storeysTree._changeStructure(storey, false);
+                              }
+                              else if (index == 1){
+                                  storeysTree._changeStructure(storey, true);
+                                  storeysTree.checkIfStoreys(storey);
                               }
                               else {
                                   storeysTree._changeStructure(storey, true);
@@ -171340,7 +171423,9 @@
       const toolbarTemplate = `<div class="xeokit-toolbar">
     <!-- Reset button -->
     <div class="xeokit-btn-group">
-        <input type="input" class="xeokit-i18n xeokit-btn" id="searchInput" placeholder="Serach by Id,Name,Class,Type,Reference"></input>
+        <input type="input" class="xeokit-i18n xeokit-btn input-like-button" id="searchInput" placeholder="Search by Id, Name, Class, Type, Reference"></input>
+    </div>
+    <div class="xeokit-btn-group">
         <button type="button" class="xeokit-i18n xeokit-reset xeokit-btn fa fa-home fa-2x disabled" data-xeokit-i18ntip="toolbar.resetViewTip" data-tippy-content="Reset view"></button>
     </div>
     <div class="xeokit-btn-group" role="group">
@@ -171660,6 +171745,32 @@
               buttonElement: toolbarElement.querySelector(".xeokit-fit"),
               active: false
           });
+
+          const inspectorContainer = document.querySelector('.op-ifc-viewer--inspector-container');
+
+          if (inspectorContainer) {
+              const observer = new MutationObserver((mutationsList) => {
+                  for (const mutation of mutationsList) {
+                      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                          inspectorContainer.offsetWidth + 'px';
+                          console.log(document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.width);
+                          
+                          if (inspectorContainer.classList.contains('op-ifc-viewer--inspector-container-hidden')) {
+                              document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.display = "block";
+                              document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.width = '469px';
+                          }
+                          else {
+                              document.getElementsByClassName('op-wp-list-view work-packages-split-view--tabletimeline-side')[0].style.display = "none";
+                              inspectorContainer.style.width = '469px';
+                          }
+
+                      }
+                  }
+              });
+
+              // Start observing the inspectorContainer for attribute changes
+              observer.observe(inspectorContainer, { attributes: true });
+          }
 
           // Allows Three-D and First Person toggle buttons to cooperatively switch
           // CameraControl#navMode between "orbit", "firstPerson" and "planView" modes
