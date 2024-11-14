@@ -53944,7 +53944,7 @@ span.flatpickr-weekday {
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: white;
-    color: #aaa; /* Placeholder text color */
+    color: black; /* Placeholder text color */
     text-align: left;
     cursor: text;
 }
